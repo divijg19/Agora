@@ -1,9 +1,20 @@
+from enum import Enum
+
 from pydantic import BaseModel, Field
+
+
+class TurnIntent(str, Enum):
+    OPENING = "Opening"
+    COUNTER = "Counter"
+    DEEPENING = "Deepening"
+    REBUTTAL = "Rebuttal"
+    CLOSING = "Closing"
 
 
 class Turn(BaseModel):
     index: int = Field(ge=1)
     speaker: str
+    intent: TurnIntent
     text: str
 
 
