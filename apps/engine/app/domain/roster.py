@@ -1,1 +1,0 @@
-"""Roster placeholder."""

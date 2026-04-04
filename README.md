@@ -92,26 +92,6 @@ Every debate is:
 
 ---
 
-## 📂 Structure
-
-```
-
-agora/
-├── apps/
-│   ├── engine/
-│   ├── core/
-│   ├── models/
-│   ├── llm/
-│   └── web/
-├── docs/
-├── infra/
-├── package.json
-└── pyproject.toml
-
-````
-
----
-
 ## 🔄 API (Minimal)
 
 ### Start
@@ -124,7 +104,7 @@ agora/
   "fighter_b": "Philosopher",
   "auto_judge": true
 }
-````
+```
 
 ### Stream
 
