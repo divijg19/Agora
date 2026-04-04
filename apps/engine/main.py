@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
     await app.state.llm_client.aclose()
 
 
-app = FastAPI(title="Agora Engine", version="0.0.2", lifespan=lifespan)
+app = FastAPI(title="Agora Engine", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
