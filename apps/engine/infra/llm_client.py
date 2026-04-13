@@ -1,29 +1,34 @@
 import os
+import json
 from typing import AsyncGenerator, Type, TypeVar
+from pydantic import BaseModel
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
-from pydantic import BaseModel
+
+load_dotenv()
 
 T = TypeVar('T', bound=BaseModel)
-
-# Ensure environment variables are loaded (for OPENAI_API_KEY)
-load_dotenv()
 
 
 class AsyncLLMClient:
     def __init__(self):
-        # Automatically picks up OPENAI_API_KEY from environment
-        self.client = AsyncOpenAI()
+        # By checking for an alternative BASE_URL, we can point the standard OpenAI SDK 
+        # at free providers like Groq (https://api.groq.com/openai/v1) or Ollama (http://localhost:11434/v1)
+        base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+        api_key = os.getenv("OPENAI_API_KEY", "no_key_required") # Fallback for local models
+        
+        self.client = AsyncOpenAI(
+            base_url=base_url,
+            api_key=api_key
+        )
 
-        # Hard constraints for the spectacle engine
-        self.model = "gpt-4o-mini"
-        self.max_tokens = 150  # Keeps turns punchy
-        self.temperature = 0.7 # Enough variance, but stays on rails
+        # Use an environment variable for the model, fallback to a fast open-source model
+        self.model = os.getenv("LLM_MODEL", "llama3-8b-8192")
+        self.max_tokens = 150
+        self.temperature = 0.7
 
     async def stream_generation(self, system_prompt: str, prompt: str) -> AsyncGenerator[str, None]:
-        """
-        Yields text chunks directly from the OpenAI async stream.
-        """
+        """Yields text chunks from any OpenAI-compatible async stream."""
         response = await self.client.chat.completions.create(
             model=self.model,
             messages=[
@@ -37,26 +42,30 @@ class AsyncLLMClient:
 
         async for chunk in response:
             if chunk.choices and chunk.choices[0].delta.content:
-                # Yield raw string chunks
                 yield chunk.choices[0].delta.content
 
     async def generate_structured(self, system_prompt: str, prompt: str, response_model: Type[T]) -> T:
         """
-        Forces the LLM to return a strictly typed Pydantic object.
-        Uses OpenAI's beta parse feature for guaranteed structured outputs.
+        Forces a structured JSON output using standard JSON mode (supported by open models)
+        instead of the proprietary OpenAI beta.parse method.
         """
-        response = await self.client.beta.chat.completions.parse(
+        # Inject the expected schema into the system prompt to guide open models
+        schema_str = json.dumps(response_model.model_json_schema())
+        json_system_prompt = f"{system_prompt}\n\nIMPORTANT: You must return a valid JSON object matching this exact schema:\n{schema_str}"
+
+        response = await self.client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": system_prompt},
+                {"role": "system", "content": json_system_prompt},
                 {"role": "user", "content": prompt}
             ],
-            response_format=response_model,
-            temperature=0.2, # Lower temperature for analytical judging
+            response_format={"type": "json_object"},
+            temperature=0.1, # Lower temperature for judging precision
         )
-        # return the parsed Pydantic object directly
-        return response.choices[0].message.parsed
+        
+        raw_content = response.choices[0].message.content
+        # Validate the raw JSON string directly into our Pydantic model
+        return response_model.model_validate_json(raw_content)
 
-
-# Singleton instance to be used across the app
+# Singleton instance
 llm = AsyncLLMClient()
