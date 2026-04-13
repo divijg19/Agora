@@ -46,12 +46,19 @@ class AsyncLLMClient:
 
     async def generate_structured(self, system_prompt: str, prompt: str, response_model: Type[T]) -> T:
         """
-        Forces a structured JSON output using standard JSON mode (supported by open models)
-        instead of the proprietary OpenAI beta.parse method.
+        Forces a structured JSON output using standard JSON mode.
+        Uses a concrete JSON template instead of raw schema to prevent 8B model hallucinations.
         """
-        # Inject the expected schema into the system prompt to guide open models
-        schema_str = json.dumps(response_model.model_json_schema())
-        json_system_prompt = f"{system_prompt}\n\nIMPORTANT: You must return a valid JSON object matching this exact schema:\n{schema_str}"
+        # Create a simple dummy JSON template based on the model's keys
+        example_dict = {key: "..." for key in response_model.model_fields.keys()}
+        example_json = json.dumps(example_dict, indent=2)
+
+        json_system_prompt = (
+            f"{system_prompt}\n\n"
+            f"IMPORTANT: You must output ONLY a valid JSON object.\n"
+            f"Do not output schema definitions. Return the actual evaluated data matching this exact structure:\n"
+            f"{example_json}"
+        )
 
         response = await self.client.chat.completions.create(
             model=self.model,
@@ -60,11 +67,10 @@ class AsyncLLMClient:
                 {"role": "user", "content": prompt}
             ],
             response_format={"type": "json_object"},
-            temperature=0.1, # Lower temperature for judging precision
+            temperature=0.1,
         )
-        
+
         raw_content = response.choices[0].message.content
-        # Validate the raw JSON string directly into our Pydantic model
         return response_model.model_validate_json(raw_content)
 
 # Singleton instance
