@@ -1,21 +1,10 @@
-from contextlib import asynccontextmanager
-
-from api.routes import router as debate_router
-from domain.director import Director
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from infra.llm_client import HttpLLMClient
+from api.routes import router as api_router
+from api.stream import router as stream_router
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    app.state.llm_client = HttpLLMClient()
-    app.state.director = Director(llm_client=app.state.llm_client)
-    yield
-    await app.state.llm_client.aclose()
-
-
-app = FastAPI(title="Agora Engine", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Agora Engine", version="0.1.4")
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,7 +14,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(debate_router, prefix="/api")
+app.include_router(api_router, prefix="/api/match")
+app.include_router(stream_router, prefix="/api/stream")
+
+# In-memory registry for active matches
+app.state.matches = {}
 
 
 @app.get("/health")
