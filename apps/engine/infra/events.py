@@ -1,22 +1,19 @@
-import json
 from enum import Enum
-from typing import Any
+from typing import Any, Dict
+import json
 
-from pydantic import BaseModel, Field
 
-
-class EventType(str, Enum):
+class ArenaEvent(str, Enum):
     TURN_START = "turn_start"
     CHUNK = "chunk"
     TURN_END = "turn_end"
-    RESULT = "result"
+    JUDGE_EVALUATING = "judge_evaluating"
+    MATCH_RESULT = "match_result"
 
 
-class DebateEvent(BaseModel):
-    type: EventType
-    session_id: str
-    payload: dict[str, Any] = Field(default_factory=dict)
-
-
-def encode_sse(event: DebateEvent) -> str:
-    return f"event: {event.type.value}\ndata: {json.dumps(event.payload, separators=(',', ':'))}\n\n"
+def format_sse(event: ArenaEvent, data: Dict[str, Any]) -> Dict[str, Any]:
+    """Formats data into an sse-starlette compliant dictionary."""
+    return {
+        "event": event.value,
+        "data": json.dumps(data)
+    }

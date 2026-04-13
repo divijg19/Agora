@@ -1,7 +1,7 @@
 from typing import AsyncGenerator, Tuple
-from app.domain.schemas import MatchState, TurnIntent, DebateTurn
-from app.domain.personas import get_persona
-from app.infra.llm_client import llm
+from domain.schemas import MatchState, TurnIntent, DebateTurn
+from domain.personas import get_persona
+from infra.llm_client import llm
 
 
 def get_turn_intent(current_turn: int, max_turns: int) -> TurnIntent:
@@ -92,7 +92,11 @@ async def execute_turn(state: MatchState) -> AsyncGenerator[Tuple[str, str], Non
         yield ("chunk", chunk)
 
     # 3. Update state in memory
-    completed_turn = DebateTurn(speaker_id=speaker_id, text=full_text.strip(), intent=intent)
+    completed_turn = DebateTurn(
+        speaker_id=speaker_id,
+        text=full_text.strip(),
+        intent=intent,
+    )
     state.turns.append(completed_turn)
     state.current_turn_count += 1
 

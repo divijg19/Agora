@@ -1,28 +1,35 @@
+from pydantic import BaseModel
+from typing import List
 from enum import Enum
-
-from pydantic import BaseModel, Field
 
 
 class TurnIntent(str, Enum):
-    OPENING = "Opening"
-    COUNTER = "Counter"
-    DEEPENING = "Deepening"
-    REBUTTAL = "Rebuttal"
-    CLOSING = "Closing"
+    OPENING = "opening"
+    COUNTER = "counter"
+    DEEPENING = "deepening"
+    REBUTTAL = "rebuttal"
+    CLOSING = "closing"
 
 
-class Turn(BaseModel):
-    index: int = Field(ge=1)
-    speaker: str
-    intent: TurnIntent
+class DebateTurn(BaseModel):
+    speaker_id: str
     text: str
+    intent: TurnIntent
 
 
-class DebateState(BaseModel):
-    session_id: str
+class JudgeVerdict(BaseModel):
+    winner_id: str
+    fighter_a_critique: str
+    fighter_b_critique: str
+    punchline_reasoning: str
+
+
+class MatchState(BaseModel):
+    match_id: str
     topic: str
     fighter_a: str
     fighter_b: str
-    max_turns: int = Field(default=4, ge=2, le=12)
-    status: str = "initialized"
-    turns: list[Turn] = Field(default_factory=list)
+    turns: List[DebateTurn] = []
+    current_turn_count: int = 0
+    max_turns: int = 6
+    status: str = "initialized"  # initialized, active, judging, completed

@@ -1,58 +1,32 @@
-from domain.schemas import DebateState
-from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import StreamingResponse
-from infra.events import DebateEvent, EventType, encode_sse
-from pydantic import BaseModel, Field
+import uuid
+from fastapi import APIRouter, Request, HTTPException
+from pydantic import BaseModel
+from domain.schemas import MatchState
+from domain.personas import ROSTER
 
-router = APIRouter(tags=["debate"])
-
-
-class StartDebateRequest(BaseModel):
-    topic: str = Field(min_length=3, max_length=280)
-    fighter_a: str = Field(min_length=1, max_length=80)
-    fighter_b: str = Field(min_length=1, max_length=80)
-    max_turns: int = Field(default=4, ge=2, le=12)
+router = APIRouter()
 
 
-class StartDebateResponse(BaseModel):
-    session_id: str
-    status: str
+class StartMatchRequest(BaseModel):
+    topic: str
+    fighter_a: str
+    fighter_b: str
 
 
-@router.post("/debate/start", response_model=StartDebateResponse)
-async def start_debate(
-    payload: StartDebateRequest, request: Request
-) -> StartDebateResponse:
-    director = request.app.state.director
-    state: DebateState = director.create_session(
+@router.post("/start")
+async def start_match(request: Request, payload: StartMatchRequest):
+    if payload.fighter_a not in ROSTER or payload.fighter_b not in ROSTER:
+        raise HTTPException(status_code=400, detail="Invalid fighter ID.")
+
+    match_id = str(uuid.uuid4())
+    new_match = MatchState(
+        match_id=match_id,
         topic=payload.topic,
         fighter_a=payload.fighter_a,
-        fighter_b=payload.fighter_b,
-        max_turns=payload.max_turns,
+        fighter_b=payload.fighter_b
     )
-    return StartDebateResponse(session_id=state.session_id, status=state.status)
 
+    # Store in FastAPI in-memory state
+    request.app.state.matches[match_id] = new_match
 
-@router.get("/debate/stream/{session_id}")
-async def stream_debate(session_id: str, request: Request) -> StreamingResponse:
-    director = request.app.state.director
-
-    if not director.has_session(session_id):
-        raise HTTPException(status_code=404, detail="session not found")
-
-    async def event_stream():
-        async for event_name, payload in director.stream_session(session_id):
-            event = DebateEvent(
-                type=EventType(event_name), session_id=session_id, payload=payload
-            )
-            yield encode_sse(event)
-
-    return StreamingResponse(
-        event_stream(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
-    )
+    return {"message": "Match initialized", "match_id": match_id}
