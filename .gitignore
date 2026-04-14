@@ -1,25 +1,30 @@
-# dependencies (bun install)
-node_modules
+# dependencies
+node_modules/
 
-# output
-out
-dist
+# build outputs
+out/
+dist/
+dist-ssr/
+coverage/
+*.lcov
 *.tgz
+*.tsbuildinfo
+
+# logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # python
 __pycache__/
 *.pyc
-.env
 .venv/
-
-# code coverage
-coverage
-*.lcov
-
-# logs
-logs
-_.log
-report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+.ruff_cache/
 
 # dotenv environment variable files
 .env
@@ -27,14 +32,21 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .env.test.local
 .env.production.local
 .env.local
+*.local
 
 # caches
 .eslintcache
-.cache
-*.tsbuildinfo
+.cache/
 
-# IntelliJ based IDEs
-.idea
+# editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # Finder (MacOS) folder config
 .DS_Store
