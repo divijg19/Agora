@@ -14,6 +14,7 @@ export function useEngineStream(matchId: string | null) {
   const [currentSpeaker, setCurrentSpeaker] = useState<string | null>(null);
   const [rawText, setRawText] = useState<string>("");
   const [verdict, setVerdict] = useState<MatchVerdict | null>(null);
+  const [turnCount, setTurnCount] = useState(0);
 
   const eventSourceRef = useRef<EventSource | null>(null);
 
@@ -30,6 +31,7 @@ export function useEngineStream(matchId: string | null) {
       const data = JSON.parse(e.data);
       setCurrentSpeaker(data.speaker_id);
       setRawText(""); // Clear dialogue box for new turn
+      setTurnCount((prev) => prev + 1);
     });
 
     sse.addEventListener("chunk", (e) => {
@@ -60,5 +62,5 @@ export function useEngineStream(matchId: string | null) {
     };
   }, [matchId]);
 
-  return { status, currentSpeaker, rawText, verdict };
+  return { status, currentSpeaker, rawText, verdict, turnCount };
 }
