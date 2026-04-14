@@ -4,7 +4,12 @@ import { startMatch } from "../lib/api";
 import { ROSTER } from "../lib/roster";
 
 interface SetupScreenProps {
-  onMatchStarted: (matchId: string) => void;
+  onMatchStarted: (
+    matchId: string,
+    topic: string,
+    fighterA: string,
+    fighterB: string,
+  ) => void;
 }
 
 export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
@@ -27,7 +32,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
         fighter_a: fighterA,
         fighter_b: fighterB,
       });
-      onMatchStarted(matchId);
+      onMatchStarted(matchId, topic, fighterA as string, fighterB as string);
     } catch {
       setError("Failed to connect to the Arena Engine.");
       setIsLoading(false);
