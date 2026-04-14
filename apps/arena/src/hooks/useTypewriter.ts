@@ -21,7 +21,7 @@ export function useTypewriter(rawText: string, speedMs: number = 30) {
 
       return () => clearTimeout(timeout);
     }
-  }, [rawText, displayedText, speedMs]);
+  }, [rawText, speedMs]);
 
   return displayedText;
 }
