@@ -2,26 +2,69 @@ import { useEffect, useRef, useState } from "react";
 
 export function useTypewriter(rawText: string, speedMs: number = 30) {
   const [displayedText, setDisplayedText] = useState("");
-  const currentIndex = useRef(0);
+  const displayedRef = useRef("");
+  const bufferedTextRef = useRef("");
+  const queueRef = useRef<string[]>([]);
 
-  // Reset if rawText is completely cleared (new turn)
   useEffect(() => {
-    if (rawText === "") {
-      setDisplayedText("");
-      currentIndex.current = 0;
+    displayedRef.current = displayedText;
+  }, [displayedText]);
+
+  useEffect(() => {
+    if (speedMs <= 0) {
+      queueRef.current = [];
+      bufferedTextRef.current = rawText;
+      setDisplayedText(rawText);
+      return;
     }
-  }, [rawText]);
 
-  useEffect(() => {
-    if (currentIndex.current < rawText.length) {
-      const timeout = setTimeout(() => {
-        setDisplayedText((prev) => prev + rawText[currentIndex.current]);
-        currentIndex.current += 1;
-      }, speedMs);
+    const isReset =
+      rawText === "" ||
+      rawText.length < bufferedTextRef.current.length ||
+      !rawText.startsWith(bufferedTextRef.current);
 
-      return () => clearTimeout(timeout);
+    if (isReset) {
+      queueRef.current = [];
+      bufferedTextRef.current = "";
+
+      if (displayedRef.current !== "") {
+        displayedRef.current = "";
+        setDisplayedText("");
+      }
+    }
+
+    const delta = rawText.slice(bufferedTextRef.current.length);
+
+    if (delta.length > 0) {
+      queueRef.current.push(...delta.split(""));
+      bufferedTextRef.current = rawText;
+    }
+
+    if (rawText === "" && displayedRef.current === "") {
+      bufferedTextRef.current = "";
     }
   }, [rawText, speedMs]);
+
+  useEffect(() => {
+    if (speedMs <= 0) {
+      return;
+    }
+
+    const intervalId = setInterval(
+      () => {
+        const nextChar = queueRef.current.shift();
+
+        if (!nextChar) {
+          return;
+        }
+
+        setDisplayedText((prev) => prev + nextChar);
+      },
+      Math.max(speedMs, 1),
+    );
+
+    return () => clearInterval(intervalId);
+  }, [speedMs]);
 
   return displayedText;
 }

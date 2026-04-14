@@ -5,10 +5,10 @@
     "": {
       "name": "agora",
       "dependencies": {
-        "@biomejs/biome": "^2.4.11",
+        "@biomejs/biome": "latest",
       },
       "devDependencies": {
-        "concurrently": "^9.2.1",
+        "concurrently": "latest",
       },
     },
   },

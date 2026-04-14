@@ -1,3 +1,4 @@
+import asyncio
 from typing import AsyncGenerator, Tuple
 from domain.schemas import MatchState, TurnIntent, DebateTurn
 from domain.personas import get_persona
@@ -28,7 +29,9 @@ def get_intent_instruction(intent: TurnIntent) -> str:
     return instructions[intent]
 
 
-def build_prompts(state: MatchState, speaker_id: str, intent: TurnIntent) -> Tuple[str, str]:
+def build_prompts(
+    state: MatchState, speaker_id: str, intent: TurnIntent
+) -> Tuple[str, str]:
     """Compiles the System and User prompts for the LLM."""
     persona = get_persona(speaker_id)
 
@@ -38,7 +41,11 @@ def build_prompts(state: MatchState, speaker_id: str, intent: TurnIntent) -> Tup
         p = get_persona(turn.speaker_id)
         history_lines.append(f"[{p.name}]: {turn.text}")
 
-    history_str = "\n\n".join(history_lines) if history_lines else "(The debate is just beginning.)"
+    history_str = (
+        "\n\n".join(history_lines)
+        if history_lines
+        else "(The debate is just beginning.)"
+    )
 
     system_prompt = f"""You are an AI actor in a theatrical debate game.
 Your Persona: {persona.name} ({persona.tagline})
@@ -102,3 +109,6 @@ async def execute_turn(state: MatchState) -> AsyncGenerator[Tuple[str, str], Non
 
     # 4. Signal Turn End
     yield ("end", full_text.strip())
+
+    # Let the frontend typewriter and user finish reading before next turn starts.
+    await asyncio.sleep(2.5)

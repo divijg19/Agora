@@ -36,9 +36,12 @@ export function CombatScreen({
   if (isJudge) speakerName = "THE JUDGE";
 
   // Calculate HP for game feel (Loser drops to 0 at the end)
-  const isComplete = status === "completed" && verdict;
+  const isComplete = status === "completed" && verdict !== null;
   const hpA = isComplete ? (verdict.winner_id === fighterAId ? 100 : 0) : 100;
   const hpB = isComplete ? (verdict.winner_id === fighterBId ? 100 : 0) : 100;
+  const winnerName = isComplete
+    ? ROSTER.find((f) => f.id === verdict.winner_id)?.name
+    : null;
 
   return (
     <motion.div
@@ -47,7 +50,11 @@ export function CombatScreen({
       className="max-w-6xl w-full mx-auto p-4 flex flex-col justify-between h-[85vh] relative z-10"
     >
       {/* Header Topic & Turn Indicator */}
-      <div className="text-center mb-8 border-b-2 border-arena-border pb-4 relative">
+      <div
+        className={`text-center mb-8 border-b-2 border-arena-border pb-4 relative transition-all duration-300 ${
+          isComplete ? "opacity-60 blur-[1px]" : "opacity-100"
+        }`}
+      >
         <h2 className="text-xl text-gray-400">CURRENT DEBATE:</h2>
         <h1 className="text-3xl text-arena-text font-bold uppercase">
           {topic}
@@ -60,7 +67,11 @@ export function CombatScreen({
       </div>
 
       {/* The Stage */}
-      <div className="flex justify-between items-end px-10 grow mb-10 relative">
+      <div
+        className={`flex justify-between items-end px-10 grow mb-10 relative transition-all duration-300 ${
+          isComplete ? "opacity-60 blur-[1px]" : "opacity-100"
+        }`}
+      >
         <FighterSprite
           fighter={fighterA}
           isActive={isASpeaking}
@@ -94,51 +105,72 @@ export function CombatScreen({
         />
       </div>
 
-      {/* The Dialogue & Verdict Area */}
-      {isComplete ? (
-        <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="border-4 border-yellow-500 bg-black p-6 shadow-[0_0_30px_rgba(234,179,8,0.2)] max-h-[40vh] overflow-y-auto"
-        >
-          <h2 className="text-4xl text-yellow-500 mb-6 text-center border-b-2 border-yellow-500/30 pb-4">
-            🏆 WINNER: {ROSTER.find((f) => f.id === verdict.winner_id)?.name} 🏆
-          </h2>
-
-          <p className="text-2xl mb-8 leading-relaxed text-center font-bold">
-            "{verdict.punchline_reasoning}"
-          </p>
-
-          {/* Critique Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div
-              className={`p-4 border-2 ${verdict.winner_id === fighterAId ? "border-arena-green" : "border-arena-red"}`}
-            >
-              <h3 className="text-xl font-bold mb-2 uppercase text-gray-400">
-                {fighterA.name} Critique:
-              </h3>
-              <p className="text-lg text-gray-300">
-                {verdict.fighter_a_critique}
-              </p>
-            </div>
-            <div
-              className={`p-4 border-2 ${verdict.winner_id === fighterBId ? "border-arena-green" : "border-arena-red"}`}
-            >
-              <h3 className="text-xl font-bold mb-2 uppercase text-gray-400">
-                {fighterB.name} Critique:
-              </h3>
-              <p className="text-lg text-gray-300">
-                {verdict.fighter_b_critique}
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      ) : (
+      {/* The Dialogue Area */}
+      <div
+        className={`transition-all duration-300 ${
+          isComplete ? "opacity-60 blur-[1px]" : "opacity-100"
+        }`}
+      >
         <DialogueBox
           speakerName={speakerName}
           rawText={rawText}
           isJudge={isJudge}
         />
+      </div>
+
+      {/* Full-Screen Verdict Modal */}
+      {isComplete && verdict && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-black/75"
+          />
+
+          <motion.div
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="relative w-full max-w-5xl max-h-[85vh] overflow-y-auto border-4 border-yellow-500 bg-black p-10 shadow-[0_0_40px_rgba(234,179,8,0.3)]"
+          >
+            <h2 className="text-5xl text-yellow-500 text-center font-bold border-b-2 border-yellow-500/40 pb-6">
+              WINNER: {winnerName}
+            </h2>
+
+            <div className="my-8 p-6 border-2 border-yellow-500/50 bg-yellow-500/5">
+              <h3 className="text-lg text-yellow-400 uppercase tracking-wide mb-3 text-center">
+                Judge Punchline
+              </h3>
+              <p className="text-3xl leading-relaxed text-center font-bold text-arena-text">
+                "{verdict.punchline_reasoning}"
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div
+                className={`p-6 border-2 ${verdict.winner_id === fighterAId ? "border-arena-green" : "border-arena-red"}`}
+              >
+                <h3 className="text-2xl font-bold mb-4 uppercase text-gray-300">
+                  {fighterA.name} Critique
+                </h3>
+                <p className="text-xl leading-relaxed text-gray-200">
+                  {verdict.fighter_a_critique}
+                </p>
+              </div>
+
+              <div
+                className={`p-6 border-2 ${verdict.winner_id === fighterBId ? "border-arena-green" : "border-arena-red"}`}
+              >
+                <h3 className="text-2xl font-bold mb-4 uppercase text-gray-300">
+                  {fighterB.name} Critique
+                </h3>
+                <p className="text-xl leading-relaxed text-gray-200">
+                  {verdict.fighter_b_critique}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       )}
     </motion.div>
   );
