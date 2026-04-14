@@ -2,11 +2,18 @@ import { useEffect, useRef, useState } from "react";
 
 export type ArenaStatus = "idle" | "debating" | "judging" | "completed";
 
+export interface MatchVerdict {
+  winner_id: string;
+  fighter_a_critique: string;
+  fighter_b_critique: string;
+  punchline_reasoning: string;
+}
+
 export function useEngineStream(matchId: string | null) {
   const [status, setStatus] = useState<ArenaStatus>("idle");
   const [currentSpeaker, setCurrentSpeaker] = useState<string | null>(null);
   const [rawText, setRawText] = useState<string>("");
-  const [verdict, setVerdict] = useState<any>(null);
+  const [verdict, setVerdict] = useState<MatchVerdict | null>(null);
 
   const eventSourceRef = useRef<EventSource | null>(null);
 
@@ -37,7 +44,7 @@ export function useEngineStream(matchId: string | null) {
     });
 
     sse.addEventListener("match_result", (e) => {
-      const data = JSON.parse(e.data);
+      const data: MatchVerdict = JSON.parse(e.data);
       setVerdict(data);
       setStatus("completed");
       sse.close();
