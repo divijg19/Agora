@@ -5,19 +5,24 @@ interface FighterSpriteProps {
   fighter: FighterDef;
   isActive: boolean;
   facing: "left" | "right";
+  hp: number; // 0 to 100
 }
 
 export function FighterSprite({
   fighter,
   isActive,
   facing,
+  hp,
 }: FighterSpriteProps) {
   return (
     <div className="flex flex-col items-center">
-      {/* Health Bar (Visual fluff for game feel) */}
-      <div className="w-48 h-4 border-2 border-arena-border bg-black mb-4 p-0.5">
-        <div
-          className={`h-full ${fighter.color} transition-all duration-500 w-full`}
+      {/* Dynamic Health Bar */}
+      <div className="w-48 h-6 border-4 border-arena-border bg-black mb-4 p-0.5 relative">
+        <motion.div
+          initial={{ width: "100%" }}
+          animate={{ width: `${hp}%` }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+          className={`h-full ${fighter.color}`}
         />
       </div>
 
