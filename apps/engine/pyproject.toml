@@ -16,3 +16,7 @@ dependencies = [
 
 [tool.uv]
 package = false
+
+[tool.ty.environment]
+root = ["."]
+python = "./.venv/bin/python"
