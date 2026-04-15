@@ -20,8 +20,15 @@ export function CombatScreen({
   fighterB,
   onRestart,
 }: CombatScreenProps) {
-  const { status, currentSpeaker, currentIntent, rawText, verdict, turnCount } =
-    useEngineStream(matchId);
+  const {
+    status,
+    currentSpeaker,
+    currentIntent,
+    rawText,
+    verdict,
+    turnCount,
+    errorMessage,
+  } = useEngineStream(matchId);
   const [showVerdictModal, setShowVerdictModal] = useState(true);
   const [userVote, setUserVote] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -46,9 +53,9 @@ export function CombatScreen({
     }
   }, [status]);
 
-  const isASpeaking = activeSpeakerVisual === fighterA.id;
-  const isBSpeaking = activeSpeakerVisual === fighterB.id;
-  const isJudge = activeSpeakerVisual === "judge";
+  const isASpeaking = status !== "error" && activeSpeakerVisual === fighterA.id;
+  const isBSpeaking = status !== "error" && activeSpeakerVisual === fighterB.id;
+  const isJudge = status !== "error" && activeSpeakerVisual === "judge";
 
   let speakerName = null;
   if (isASpeaking) speakerName = fighterA.name;
@@ -289,6 +296,26 @@ export function CombatScreen({
             isJudge={isJudge}
             onTypingChange={setIsTyping}
           />
+        </div>
+      )}
+
+      {/* Catastrophic Error Overlay */}
+      {status === "error" && (
+        <div className="absolute inset-0 bg-black/80 z-50 flex flex-col items-center justify-center backdrop-blur-sm border-4 border-arena-red">
+          <h1 className="text-6xl text-arena-red font-bold mb-6 tracking-widest uppercase animate-pulse">
+            CONNECTION LOST
+          </h1>
+          <p className="text-2xl text-gray-300 mb-10 max-w-lg text-center">
+            {errorMessage ??
+              "The neural link to the Arena Engine has been severed. The debate cannot continue."}
+          </p>
+          <button
+            type="button"
+            onClick={onRestart}
+            className="px-8 py-4 border-4 border-arena-red text-arena-red hover:bg-arena-red hover:text-black transition-colors font-bold text-2xl uppercase"
+          >
+            ABORT MATCH
+          </button>
         </div>
       )}
     </motion.div>

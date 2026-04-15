@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
-export type ArenaStatus = "idle" | "debating" | "judging" | "completed";
+export type ArenaStatus =
+  | "idle"
+  | "debating"
+  | "judging"
+  | "completed"
+  | "error";
 
 export interface MatchVerdict {
   winner_id: string;
@@ -16,8 +21,10 @@ export function useEngineStream(matchId: string | null) {
   const [rawText, setRawText] = useState<string>("");
   const [verdict, setVerdict] = useState<MatchVerdict | null>(null);
   const [turnCount, setTurnCount] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const eventSourceRef = useRef<EventSource | null>(null);
+  const hasCompletedRef = useRef(false);
 
   useEffect(() => {
     if (!matchId) return;
@@ -28,6 +35,8 @@ export function useEngineStream(matchId: string | null) {
     setRawText("");
     setVerdict(null);
     setTurnCount(0);
+    setErrorMessage(null);
+    hasCompletedRef.current = false;
 
     const sse = new EventSource(`http://localhost:8000/api/stream/${matchId}`);
     eventSourceRef.current = sse;
@@ -57,11 +66,16 @@ export function useEngineStream(matchId: string | null) {
       setVerdict(data);
       setStatus("completed");
       setCurrentIntent(null);
+      hasCompletedRef.current = true;
       sse.close();
     });
 
-    sse.onerror = () => {
-      console.error("SSE Connection Error");
+    sse.onerror = (err) => {
+      console.error("SSE Connection Error:", err);
+      if (!hasCompletedRef.current) {
+        setStatus("error");
+        setErrorMessage("THE CONNECTION TO THE ARENA ENGINE WAS LOST.");
+      }
       sse.close();
     };
 
@@ -70,5 +84,13 @@ export function useEngineStream(matchId: string | null) {
     };
   }, [matchId]);
 
-  return { status, currentSpeaker, currentIntent, rawText, verdict, turnCount };
+  return {
+    status,
+    currentSpeaker,
+    currentIntent,
+    rawText,
+    verdict,
+    turnCount,
+    errorMessage,
+  };
 }
