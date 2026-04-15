@@ -5,7 +5,7 @@ interface FighterSpriteProps {
   fighter: FighterDef;
   isActive: boolean;
   facing: "left" | "right";
-  hp: number; // 0 to 100
+  hp: number;
   currentIntent?: string | null;
 }
 
@@ -16,38 +16,36 @@ export function FighterSprite({
   hp,
   currentIntent,
 }: FighterSpriteProps) {
-  // Determine if this turn is an aggressive attack
   const isAttack =
     isActive && (currentIntent === "counter" || currentIntent === "rebuttal");
 
-  // Calculate dynamic animation states
   let spriteAnimation = {};
   if (isActive) {
     if (isAttack) {
-      // Violent lunge forward
       spriteAnimation = {
         x: facing === "right" ? [0, 40, 0] : [0, -40, 0],
         y: [0, -10, 0],
         scale: 1.1,
-        filter: "brightness(1.8) drop-shadow(0 0 10px rgba(255,0,0,0.8))",
+        filter: "brightness(1.5) drop-shadow(0 0 15px rgba(255,255,255,0.5))",
       };
     } else {
-      // Standard speaking bob
       spriteAnimation = {
         y: [0, -5, 0],
         scale: 1.05,
-        filter: "brightness(1.3)",
+        filter: "brightness(1.2)",
       };
     }
   } else {
-    // Idle state
     spriteAnimation = {
       x: 0,
       y: 0,
-      scale: 1,
-      filter: "brightness(0.5)",
+      scale: 0.95,
+      filter: "brightness(0.4) grayscale(0.5)",
     };
   }
+
+  // Map the tailwind bg classes to border colors for the portrait frame
+  const borderColorClass = fighter.color.replace("bg-", "border-");
 
   return (
     <div className="flex flex-col items-center z-10">
@@ -57,31 +55,44 @@ export function FighterSprite({
           initial={{ width: "100%" }}
           animate={{ width: `${hp}%` }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
-          className={`h-full ${fighter.color}`}
+          className={`h-full ${fighter.color} shadow-[inset_0_-4px_rgba(0,0,0,0.3)]`}
         />
       </div>
 
-      {/* The Sprite Block */}
+      {/* The Portrait Sprite */}
       <motion.div
         animate={spriteAnimation}
         transition={
           isAttack
             ? { duration: 0.3, ease: "easeOut" }
             : isActive
-              ? { repeat: Infinity, duration: 1.5 }
+              ? { repeat: Infinity, duration: 1.5, ease: "easeInOut" }
               : { duration: 0.5 }
         }
-        className={`w-32 h-48 border-4 border-arena-border flex items-center justify-center relative ${fighter.color}`}
+        className={`w-32 h-40 border-4 bg-linear-to-b from-gray-800 to-black flex items-center justify-center relative overflow-hidden ${borderColorClass}`}
       >
-        {/* "Eye" to show facing direction */}
+        {/* Retro scanline overlay just for the portrait */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0)_50%,rgba(0,0,0,0.25)_50%)] bg-size-[100%_4px] pointer-events-none z-10" />
+
+        {/* The Emoji Avatar */}
         <div
-          className={`absolute top-8 w-8 h-4 bg-black ${facing === "right" ? "right-4" : "left-4"}`}
-        />
+          className="text-7xl absolute z-0"
+          style={{
+            transform: facing === "left" ? "scaleX(-1)" : "none",
+            textShadow: "0 4px 0 rgba(0,0,0,0.5)", // 8-bit drop shadow effect
+          }}
+        >
+          {fighter.avatar}
+        </div>
       </motion.div>
 
       {/* Name Tag */}
       <div
-        className={`mt-4 text-2xl font-bold uppercase tracking-widest ${isActive ? "text-white" : "text-gray-600"}`}
+        className={`mt-4 px-3 py-1 border-2 bg-black tracking-widest uppercase font-bold text-xl transition-colors ${
+          isActive
+            ? `${borderColorClass} text-white`
+            : "border-arena-border text-gray-600"
+        }`}
       >
         {fighter.name}
       </div>
