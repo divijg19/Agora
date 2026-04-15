@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Tuple
+from typing import Any, AsyncGenerator, Tuple
 from domain.schemas import MatchState, TurnIntent, DebateTurn
 from domain.personas import get_persona
 from infra.llm_client import llm
@@ -71,10 +71,10 @@ Deliver your turn now."""
     return system_prompt, user_prompt
 
 
-async def execute_turn(state: MatchState) -> AsyncGenerator[Tuple[str, str], None]:
+async def execute_turn(state: MatchState) -> AsyncGenerator[Tuple[str, Any], None]:
     """
     Executes a single turn.
-    Yields internal engine events: ("start", speaker_id), ("chunk", text), ("end", full_text)
+    Yields internal engine events: ("start", payload), ("chunk", text), ("end", full_text)
     Mutates the state by appending the completed turn.
     """
     if state.current_turn_count >= state.max_turns:
@@ -88,7 +88,13 @@ async def execute_turn(state: MatchState) -> AsyncGenerator[Tuple[str, str], Non
     system_prompt, user_prompt = build_prompts(state, speaker_id, intent)
 
     # 1. Signal Turn Start
-    yield ("start", speaker_id)
+    yield (
+        "start",
+        {
+            "speaker_id": speaker_id,
+            "intent": intent.value,
+        },
+    )
 
     # 2. Stream generation
     full_text = ""

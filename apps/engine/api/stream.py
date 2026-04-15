@@ -20,7 +20,13 @@ async def stream_match(request: Request, match_id: str):
         while state.current_turn_count < state.max_turns:
             async for event_type, data in execute_turn(state):
                 if event_type == "start":
-                    yield format_sse(ArenaEvent.TURN_START, {"speaker_id": data})
+                    yield format_sse(
+                        ArenaEvent.TURN_START,
+                        {
+                            "speaker_id": data["speaker_id"],
+                            "intent": data["intent"],
+                        },
+                    )
                 elif event_type == "chunk":
                     yield format_sse(ArenaEvent.CHUNK, {"text": data})
                 elif event_type == "end":
