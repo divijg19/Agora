@@ -1,23 +1,23 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useEngineStream } from "../hooks/useEngineStream";
-import { ROSTER } from "../lib/roster";
+import type { FighterDef } from "../types/fighter";
 import { DialogueBox } from "./DialogueBox";
 import { FighterSprite } from "./FighterSprite";
 
 interface CombatScreenProps {
   matchId: string;
   topic: string;
-  fighterAId: string;
-  fighterBId: string;
+  fighterA: FighterDef;
+  fighterB: FighterDef;
   onRestart: () => void;
 }
 
 export function CombatScreen({
   matchId,
   topic,
-  fighterAId,
-  fighterBId,
+  fighterA,
+  fighterB,
   onRestart,
 }: CombatScreenProps) {
   const { status, currentSpeaker, currentIntent, rawText, verdict, turnCount } =
@@ -46,14 +46,8 @@ export function CombatScreen({
     }
   }, [status]);
 
-  const fighterA = ROSTER.find((f) => f.id === fighterAId);
-  const fighterB = ROSTER.find((f) => f.id === fighterBId);
-
-  if (!fighterA || !fighterB)
-    return <div className="text-white">Fighter not found.</div>;
-
-  const isASpeaking = activeSpeakerVisual === fighterAId;
-  const isBSpeaking = activeSpeakerVisual === fighterBId;
+  const isASpeaking = activeSpeakerVisual === fighterA.id;
+  const isBSpeaking = activeSpeakerVisual === fighterB.id;
   const isJudge = activeSpeakerVisual === "judge";
 
   let speakerName = null;
@@ -65,12 +59,23 @@ export function CombatScreen({
   const isComplete = status === "completed" && verdict !== null;
   const modalOpen = isComplete && userVote !== null && showVerdictModal;
   const hpA =
-    isComplete && userVote ? (verdict.winner_id === fighterAId ? 100 : 0) : 100;
+    isComplete && userVote
+      ? verdict.winner_id === fighterA.id
+        ? 100
+        : 0
+      : 100;
   const hpB =
-    isComplete && userVote ? (verdict.winner_id === fighterBId ? 100 : 0) : 100;
-  const winnerName = isComplete
-    ? ROSTER.find((f) => f.id === verdict.winner_id)?.name
-    : null;
+    isComplete && userVote
+      ? verdict.winner_id === fighterB.id
+        ? 100
+        : 0
+      : 100;
+  const winnerName =
+    isComplete && verdict.winner_id === fighterA.id
+      ? fighterA.name
+      : isComplete && verdict.winner_id === fighterB.id
+        ? fighterB.name
+        : "UNKNOWN";
   const isAttack =
     (isASpeaking || isBSpeaking) &&
     (activeIntentVisual === "counter" || activeIntentVisual === "rebuttal");
@@ -179,7 +184,7 @@ export function CombatScreen({
               <div className="flex gap-8 w-full justify-center">
                 <button
                   type="button"
-                  onClick={() => setUserVote(fighterAId)}
+                  onClick={() => setUserVote(fighterA.id)}
                   className={`px-8 py-6 border-4 ${fighterA.color.replace("bg-", "border-")} hover:bg-gray-800 transition-colors flex flex-col items-center w-64`}
                 >
                   <span className="text-4xl mb-2">{fighterA.avatar}</span>
@@ -189,7 +194,7 @@ export function CombatScreen({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setUserVote(fighterBId)}
+                  onClick={() => setUserVote(fighterB.id)}
                   className={`px-8 py-6 border-4 ${fighterB.color.replace("bg-", "border-")} hover:bg-gray-800 transition-colors flex flex-col items-center w-64`}
                 >
                   <span className="text-4xl mb-2">{fighterB.avatar}</span>
@@ -223,7 +228,7 @@ export function CombatScreen({
               {/* Critique Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div
-                  className={`p-4 border-2 ${verdict.winner_id === fighterAId ? "border-arena-green" : "border-arena-red"}`}
+                  className={`p-4 border-2 ${verdict.winner_id === fighterA.id ? "border-arena-green" : "border-arena-red"}`}
                 >
                   <h3 className="text-xl font-bold mb-2 uppercase text-gray-400">
                     {fighterA.name} Critique:
@@ -233,7 +238,7 @@ export function CombatScreen({
                   </p>
                 </div>
                 <div
-                  className={`p-4 border-2 ${verdict.winner_id === fighterBId ? "border-arena-green" : "border-arena-red"}`}
+                  className={`p-4 border-2 ${verdict.winner_id === fighterB.id ? "border-arena-green" : "border-arena-red"}`}
                 >
                   <h3 className="text-xl font-bold mb-2 uppercase text-gray-400">
                     {fighterB.name} Critique:

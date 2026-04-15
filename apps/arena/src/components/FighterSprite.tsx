@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import type { FighterDef } from "../lib/roster";
+import type { FighterDef } from "../types/fighter";
 
 interface FighterSpriteProps {
   fighter: FighterDef;
