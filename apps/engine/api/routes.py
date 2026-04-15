@@ -1,6 +1,6 @@
 import uuid
 from fastapi import APIRouter, Request, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from domain.schemas import MatchState
 from domain.personas import ROSTER
 
@@ -8,7 +8,9 @@ router = APIRouter()
 
 
 class StartMatchRequest(BaseModel):
-    topic: str
+    topic: str = Field(
+        ..., min_length=5, max_length=150, description="The debate topic"
+    )
     fighter_a: str
     fighter_b: str
 

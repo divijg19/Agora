@@ -14,7 +14,7 @@ interface SetupScreenProps {
 
 export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
   const [roster, setRoster] = useState<FighterDef[]>([]);
-  const [isRosterLoading, setIsRosterLoading] = useState(true);
+  const [rosterError, setRosterError] = useState<string | null>(null);
   const [topic, setTopic] = useState("");
   const [fighterA, setFighterA] = useState<string | null>(null);
   const [fighterB, setFighterB] = useState<string | null>(null);
@@ -22,42 +22,30 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const loadRoster = async () => {
-      try {
-        const nextRoster = await fetchRoster();
-        if (!cancelled) {
-          setRoster(nextRoster);
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Failed to connect to the Arena Engine.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsRosterLoading(false);
-        }
-      }
-    };
-
-    loadRoster();
-
-    return () => {
-      cancelled = true;
-    };
+    fetchRoster()
+      .then(setRoster)
+      .catch(() =>
+        setRosterError("ARENA ENGINE OFFLINE. PLEASE TRY AGAIN LATER."),
+      );
   }, []);
 
   const canStart =
-    topic.length > 5 &&
-    fighterA &&
-    fighterB &&
-    fighterA !== fighterB &&
-    !isRosterLoading;
+    topic.length > 5 && fighterA && fighterB && fighterA !== fighterB;
 
-  if (isRosterLoading) {
+  if (rosterError) {
     return (
-      <div className="text-white text-center p-10">CONNECTING TO ARENA...</div>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center z-10 relative">
+        <h1 className="text-4xl text-arena-red mb-4">CRITICAL ERROR</h1>
+        <p className="text-xl text-gray-400">{rosterError}</p>
+      </div>
+    );
+  }
+
+  if (roster.length === 0) {
+    return (
+      <div className="text-white text-center p-10 z-10 relative text-2xl animate-pulse">
+        CONNECTING TO ARENA...
+      </div>
     );
   }
 
@@ -108,6 +96,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
           id="debate-topic"
           type="text"
           value={topic}
+          maxLength={100}
           onChange={(e) => setTopic(e.target.value)}
           placeholder="e.g. Is artificial intelligence a threat to humanity?"
           className="w-full bg-black border-2 border-arena-border p-4 text-xl text-arena-text focus:outline-none focus:border-arena-blue transition-colors"
