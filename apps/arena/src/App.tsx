@@ -2,13 +2,14 @@ import { AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { CombatScreen } from "./components/CombatScreen";
 import { SetupScreen } from "./components/SetupScreen";
+import type { FighterDef } from "./types/fighter";
 
 // To store the setup data for the Combat screen
 interface MatchConfig {
   id: string;
   topic: string;
-  fighterA: string;
-  fighterB: string;
+  fighterA: FighterDef;
+  fighterB: FighterDef;
 }
 
 function App() {
@@ -18,8 +19,8 @@ function App() {
   const handleMatchStarted = (
     id: string,
     topic: string,
-    fighterA: string,
-    fighterB: string,
+    fighterA: FighterDef,
+    fighterB: FighterDef,
   ) => {
     setMatchConfig({ id, topic, fighterA, fighterB });
   };
@@ -42,8 +43,8 @@ function App() {
               key="combat"
               matchId={matchConfig.id}
               topic={matchConfig.topic}
-              fighterAId={matchConfig.fighterA}
-              fighterBId={matchConfig.fighterB}
+              fighterA={matchConfig.fighterA}
+              fighterB={matchConfig.fighterB}
               onRestart={handleReset}
             />
           )}

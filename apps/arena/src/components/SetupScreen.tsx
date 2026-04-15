@@ -1,29 +1,76 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { startMatch } from "../lib/api";
-import { ROSTER } from "../lib/roster";
+import { useEffect, useState } from "react";
+import { fetchRoster, startMatch } from "../lib/api";
+import type { FighterDef } from "../types/fighter";
 
 interface SetupScreenProps {
   onMatchStarted: (
     matchId: string,
     topic: string,
-    fighterA: string,
-    fighterB: string,
+    fighterA: FighterDef,
+    fighterB: FighterDef,
   ) => void;
 }
 
 export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
+  const [roster, setRoster] = useState<FighterDef[]>([]);
+  const [isRosterLoading, setIsRosterLoading] = useState(true);
   const [topic, setTopic] = useState("");
   const [fighterA, setFighterA] = useState<string | null>(null);
   const [fighterB, setFighterB] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadRoster = async () => {
+      try {
+        const nextRoster = await fetchRoster();
+        if (!cancelled) {
+          setRoster(nextRoster);
+        }
+      } catch {
+        if (!cancelled) {
+          setError("Failed to connect to the Arena Engine.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsRosterLoading(false);
+        }
+      }
+    };
+
+    loadRoster();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const canStart =
-    topic.length > 5 && fighterA && fighterB && fighterA !== fighterB;
+    topic.length > 5 &&
+    fighterA &&
+    fighterB &&
+    fighterA !== fighterB &&
+    !isRosterLoading;
+
+  if (isRosterLoading) {
+    return (
+      <div className="text-white text-center p-10">CONNECTING TO ARENA...</div>
+    );
+  }
 
   const handleStart = async () => {
     if (!canStart) return;
+
+    const selectedA = roster.find((fighter) => fighter.id === fighterA);
+    const selectedB = roster.find((fighter) => fighter.id === fighterB);
+    if (!selectedA || !selectedB) {
+      setError("Failed to connect to the Arena Engine.");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
@@ -32,7 +79,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
         fighter_a: fighterA,
         fighter_b: fighterB,
       });
-      onMatchStarted(matchId, topic, fighterA as string, fighterB as string);
+      onMatchStarted(matchId, topic, selectedA, selectedB);
     } catch {
       setError("Failed to connect to the Arena Engine.");
       setIsLoading(false);
@@ -74,7 +121,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
             FIGHTER A
           </h2>
           <div className="flex flex-col gap-3">
-            {ROSTER.map((f) => (
+            {roster.map((f) => (
               <button
                 type="button"
                 key={`a-${f.id}`}
@@ -99,7 +146,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
             FIGHTER B
           </h2>
           <div className="flex flex-col gap-3">
-            {ROSTER.map((f) => (
+            {roster.map((f) => (
               <button
                 type="button"
                 key={`b-${f.id}`}
