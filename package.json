@@ -6,9 +6,18 @@
     "apps/*"
   ],
   "scripts": {
+    "dev": "concurrently \"bun run dev:engine\" \"bun run dev:arena\"",
     "dev:engine": "cd apps/engine && uv run uvicorn main:app --reload --port 8000",
     "dev:arena": "cd apps/arena && bun run dev",
-    "dev": "concurrently \"bun run dev:engine\" \"bun run dev:arena\""
+    "lint": "concurrently \"bun run lint:engine\" \"bun run lint:arena\"",
+    "lint:engine": "cd apps/engine && uv run ruff check .",
+    "lint:arena": "cd apps/arena && bun lint && bun format",
+    "lint:web": "cd apps/web && bun lint && bun format",
+    "type": "concurrently \"bun run type:engine\" \"bun run type:arena\"",
+    "type:engine": "cd apps/engine && uv run ty check .",
+    "type:arena": "cd apps/arena && bun type",
+    "type:web": "cd apps/web && bun type",
+    "qa": "bun lint && bun type"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

@@ -1,5 +1,5 @@
-from domain.personas import FighterPersona
-from domain.schemas import DebateState
+from domain.personas import Persona
+from domain.schemas import MatchState
 
 
 def resolve_turn_intent(turn_index: int, max_turns: int) -> str:
@@ -24,8 +24,8 @@ def build_system_prompt() -> str:
 
 
 def build_turn_prompt(
-    state: DebateState,
-    persona: FighterPersona,
+    state: MatchState,
+    persona: Persona,
     opponent_last_argument: str,
     intent: str,
 ) -> str:
