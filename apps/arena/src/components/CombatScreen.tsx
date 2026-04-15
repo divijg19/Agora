@@ -20,19 +20,23 @@ export function CombatScreen({
   fighterBId,
   onRestart,
 }: CombatScreenProps) {
-  const { status, currentSpeaker, rawText, verdict, turnCount } =
+  const { status, currentSpeaker, currentIntent, rawText, verdict, turnCount } =
     useEngineStream(matchId);
   const [showVerdictModal, setShowVerdictModal] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [activeSpeakerVisual, setActiveSpeakerVisual] = useState<string | null>(
     null,
   );
+  const [activeIntentVisual, setActiveIntentVisual] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!isTyping) {
       setActiveSpeakerVisual(currentSpeaker);
+      setActiveIntentVisual(currentIntent);
     }
-  }, [currentSpeaker, isTyping]);
+  }, [currentSpeaker, currentIntent, isTyping]);
 
   useEffect(() => {
     if (status === "completed") {
@@ -63,13 +67,36 @@ export function CombatScreen({
   const winnerName = isComplete
     ? ROSTER.find((f) => f.id === verdict.winner_id)?.name
     : null;
+  const isAttack =
+    (isASpeaking || isBSpeaking) &&
+    (activeIntentVisual === "counter" || activeIntentVisual === "rebuttal");
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      animate={
+        isAttack
+          ? { x: [-5, 5, -5, 5, 0], y: [-2, 2, -2, 2, 0], opacity: 1 }
+          : { x: 0, y: 0, opacity: 1 }
+      }
+      transition={isAttack ? { duration: 0.4 } : { duration: 0.5 }}
       className="max-w-6xl w-full mx-auto p-4 flex flex-col justify-between h-[85vh] relative z-10"
     >
+      {/* 3D Synthwave Grid Background (Pure CSS) */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 opacity-20">
+        <div className="absolute bottom-0 left-0 right-0 h-[40vh] bg-linear-to-t from-arena-blue/30 to-transparent" />
+        <div
+          className="w-full h-[50vh] absolute bottom-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(60, 130, 255, 0.4) 2px, transparent 2px), linear-gradient(90deg, rgba(60, 130, 255, 0.4) 2px, transparent 2px)",
+            backgroundSize: "40px 40px",
+            transform: "perspective(500px) rotateX(60deg)",
+            transformOrigin: "bottom center",
+          }}
+        />
+      </div>
+
       {/* Header Topic & Turn Indicator */}
       <div
         className={`text-center mb-8 border-b-2 border-arena-border pb-4 relative transition-all duration-300 ${
@@ -98,6 +125,7 @@ export function CombatScreen({
           isActive={isASpeaking}
           facing="right"
           hp={hpA}
+          currentIntent={activeIntentVisual}
         />
 
         {/* VS or Judge Graphic */}
@@ -123,6 +151,7 @@ export function CombatScreen({
           isActive={isBSpeaking}
           facing="left"
           hp={hpB}
+          currentIntent={activeIntentVisual}
         />
       </div>
 

@@ -12,6 +12,7 @@ export interface MatchVerdict {
 export function useEngineStream(matchId: string | null) {
   const [status, setStatus] = useState<ArenaStatus>("idle");
   const [currentSpeaker, setCurrentSpeaker] = useState<string | null>(null);
+  const [currentIntent, setCurrentIntent] = useState<string | null>(null);
   const [rawText, setRawText] = useState<string>("");
   const [verdict, setVerdict] = useState<MatchVerdict | null>(null);
   const [turnCount, setTurnCount] = useState(0);
@@ -22,14 +23,19 @@ export function useEngineStream(matchId: string | null) {
     if (!matchId) return;
 
     setStatus("debating");
+    setCurrentSpeaker(null);
+    setCurrentIntent(null);
     setRawText("");
+    setVerdict(null);
+    setTurnCount(0);
 
     const sse = new EventSource(`http://localhost:8000/api/stream/${matchId}`);
     eventSourceRef.current = sse;
 
     sse.addEventListener("turn_start", (e) => {
-      const data = JSON.parse(e.data);
+      const data: { speaker_id: string; intent?: string } = JSON.parse(e.data);
       setCurrentSpeaker(data.speaker_id);
+      setCurrentIntent(data.intent || "opening");
       setRawText(""); // Clear dialogue box for new turn
       setTurnCount((prev) => prev + 1);
     });
@@ -42,6 +48,7 @@ export function useEngineStream(matchId: string | null) {
     sse.addEventListener("judge_evaluating", () => {
       setStatus("judging");
       setCurrentSpeaker("judge");
+      setCurrentIntent(null);
       setRawText("THE JUDGE IS EVALUATING THE DUEL...");
     });
 
@@ -49,6 +56,7 @@ export function useEngineStream(matchId: string | null) {
       const data: MatchVerdict = JSON.parse(e.data);
       setVerdict(data);
       setStatus("completed");
+      setCurrentIntent(null);
       sse.close();
     });
 
@@ -62,5 +70,5 @@ export function useEngineStream(matchId: string | null) {
     };
   }, [matchId]);
 
-  return { status, currentSpeaker, rawText, verdict, turnCount };
+  return { status, currentSpeaker, currentIntent, rawText, verdict, turnCount };
 }
