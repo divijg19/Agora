@@ -1,4 +1,3 @@
-import asyncio
 from typing import AsyncGenerator, Tuple
 from domain.schemas import MatchState, TurnIntent, DebateTurn
 from domain.personas import get_persona
@@ -109,6 +108,3 @@ async def execute_turn(state: MatchState) -> AsyncGenerator[Tuple[str, str], Non
 
     # 4. Signal Turn End
     yield ("end", full_text.strip())
-
-    # Let the frontend typewriter and user finish reading before next turn starts.
-    await asyncio.sleep(2.5)

@@ -1,70 +1,56 @@
 import { useEffect, useRef, useState } from "react";
 
-export function useTypewriter(rawText: string, speedMs: number = 30) {
+export function useTypewriter(rawText: string, speedMs: number = 25) {
   const [displayedText, setDisplayedText] = useState("");
-  const displayedRef = useRef("");
-  const bufferedTextRef = useRef("");
-  const queueRef = useRef<string[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const currentIndex = useRef(0);
 
   useEffect(() => {
-    displayedRef.current = displayedText;
-  }, [displayedText]);
-
-  useEffect(() => {
-    if (speedMs <= 0) {
-      queueRef.current = [];
-      bufferedTextRef.current = rawText;
+    if (rawText === "") {
       setDisplayedText(rawText);
-      return;
+      currentIndex.current = 0;
+      setIsTyping(false);
+    } else {
+      setIsTyping(currentIndex.current < rawText.length);
     }
-
-    const isReset =
-      rawText === "" ||
-      rawText.length < bufferedTextRef.current.length ||
-      !rawText.startsWith(bufferedTextRef.current);
-
-    if (isReset) {
-      queueRef.current = [];
-      bufferedTextRef.current = "";
-
-      if (displayedRef.current !== "") {
-        displayedRef.current = "";
-        setDisplayedText("");
-      }
-    }
-
-    const delta = rawText.slice(bufferedTextRef.current.length);
-
-    if (delta.length > 0) {
-      queueRef.current.push(...delta.split(""));
-      bufferedTextRef.current = rawText;
-    }
-
-    if (rawText === "" && displayedRef.current === "") {
-      bufferedTextRef.current = "";
-    }
-  }, [rawText, speedMs]);
+  }, [rawText]);
 
   useEffect(() => {
     if (speedMs <= 0) {
+      setDisplayedText(rawText);
+      currentIndex.current = rawText.length;
+      setIsTyping(false);
       return;
     }
 
-    const intervalId = setInterval(
-      () => {
-        const nextChar = queueRef.current.shift();
+    if (currentIndex.current >= rawText.length) {
+      setIsTyping(false);
+      return;
+    }
 
-        if (!nextChar) {
-          return;
+    setIsTyping(true);
+    const interval = setInterval(() => {
+      setDisplayedText((prev) => {
+        if (currentIndex.current >= rawText.length) {
+          setIsTyping(false);
+          clearInterval(interval);
+          return prev;
         }
 
-        setDisplayedText((prev) => prev + nextChar);
-      },
-      Math.max(speedMs, 1),
-    );
+        const next = prev + rawText[currentIndex.current];
+        currentIndex.current += 1;
 
-    return () => clearInterval(intervalId);
-  }, [speedMs]);
+        if (currentIndex.current >= rawText.length) {
+          setIsTyping(false);
+          clearInterval(interval);
+        }
 
-  return displayedText;
+        return next;
+      });
+    }, speedMs);
+
+    return () => clearInterval(interval);
+  }, [rawText, speedMs]);
+
+  return { displayedText, isTyping };
 }
