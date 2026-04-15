@@ -1,19 +1,26 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useEffect } from "react";
 import { useTypewriter } from "../hooks/useTypewriter";
 
 interface DialogueBoxProps {
   speakerName: string | null;
   rawText: string;
   isJudge?: boolean;
+  onTypingChange?: (isTyping: boolean) => void;
 }
 
 export function DialogueBox({
   speakerName,
   rawText,
   isJudge = false,
+  onTypingChange,
 }: DialogueBoxProps) {
   // The typewriter hook drips the text out at retro speed
-  const displayedText = useTypewriter(rawText, 20);
+  const { displayedText, isTyping } = useTypewriter(rawText, 20);
+
+  useEffect(() => {
+    onTypingChange?.(isTyping);
+  }, [isTyping, onTypingChange]);
 
   return (
     <div
@@ -43,7 +50,7 @@ export function DialogueBox({
         {displayedText}
         {/* Blinking Cursor */}
         <motion.span
-          animate={{ opacity: [1, 0] }}
+          animate={{ opacity: isTyping ? [1, 0] : 1 }}
           transition={{ repeat: Infinity, duration: 0.8 }}
           className="inline-block w-3 h-6 bg-arena-text ml-1 align-middle"
         />

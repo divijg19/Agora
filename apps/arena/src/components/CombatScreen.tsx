@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { useEngineStream } from "../hooks/useEngineStream";
 import { ROSTER } from "../lib/roster";
 import { DialogueBox } from "./DialogueBox";
@@ -9,6 +10,7 @@ interface CombatScreenProps {
   topic: string;
   fighterAId: string;
   fighterBId: string;
+  onRestart: () => void;
 }
 
 export function CombatScreen({
@@ -16,9 +18,27 @@ export function CombatScreen({
   topic,
   fighterAId,
   fighterBId,
+  onRestart,
 }: CombatScreenProps) {
   const { status, currentSpeaker, rawText, verdict, turnCount } =
     useEngineStream(matchId);
+  const [showVerdictModal, setShowVerdictModal] = useState(true);
+  const [isTyping, setIsTyping] = useState(false);
+  const [activeSpeakerVisual, setActiveSpeakerVisual] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!isTyping) {
+      setActiveSpeakerVisual(currentSpeaker);
+    }
+  }, [currentSpeaker, isTyping]);
+
+  useEffect(() => {
+    if (status === "completed") {
+      setShowVerdictModal(true);
+    }
+  }, [status]);
 
   const fighterA = ROSTER.find((f) => f.id === fighterAId);
   const fighterB = ROSTER.find((f) => f.id === fighterBId);
@@ -26,9 +46,9 @@ export function CombatScreen({
   if (!fighterA || !fighterB)
     return <div className="text-white">Fighter not found.</div>;
 
-  const isASpeaking = currentSpeaker === fighterAId;
-  const isBSpeaking = currentSpeaker === fighterBId;
-  const isJudge = status === "judging" || currentSpeaker === "judge";
+  const isASpeaking = activeSpeakerVisual === fighterAId;
+  const isBSpeaking = activeSpeakerVisual === fighterBId;
+  const isJudge = activeSpeakerVisual === "judge";
 
   let speakerName = null;
   if (isASpeaking) speakerName = fighterA.name;
@@ -37,6 +57,7 @@ export function CombatScreen({
 
   // Calculate HP for game feel (Loser drops to 0 at the end)
   const isComplete = status === "completed" && verdict !== null;
+  const modalOpen = isComplete && showVerdictModal;
   const hpA = isComplete ? (verdict.winner_id === fighterAId ? 100 : 0) : 100;
   const hpB = isComplete ? (verdict.winner_id === fighterBId ? 100 : 0) : 100;
   const winnerName = isComplete
@@ -52,7 +73,7 @@ export function CombatScreen({
       {/* Header Topic & Turn Indicator */}
       <div
         className={`text-center mb-8 border-b-2 border-arena-border pb-4 relative transition-all duration-300 ${
-          isComplete ? "opacity-60 blur-[1px]" : "opacity-100"
+          modalOpen ? "opacity-60 blur-[1px]" : "opacity-100"
         }`}
       >
         <h2 className="text-xl text-gray-400">CURRENT DEBATE:</h2>
@@ -69,7 +90,7 @@ export function CombatScreen({
       {/* The Stage */}
       <div
         className={`flex justify-between items-end px-10 grow mb-10 relative transition-all duration-300 ${
-          isComplete ? "opacity-60 blur-[1px]" : "opacity-100"
+          modalOpen ? "opacity-60 blur-[1px]" : "opacity-100"
         }`}
       >
         <FighterSprite
@@ -108,18 +129,40 @@ export function CombatScreen({
       {/* The Dialogue Area */}
       <div
         className={`transition-all duration-300 ${
-          isComplete ? "opacity-60 blur-[1px]" : "opacity-100"
+          modalOpen ? "opacity-60 blur-[1px]" : "opacity-100"
         }`}
       >
-        <DialogueBox
-          speakerName={speakerName}
-          rawText={rawText}
-          isJudge={isJudge}
-        />
+        {isComplete && !showVerdictModal ? (
+          <div className="w-full border-4 border-arena-border p-6 bg-black min-h-50 shadow-2xl max-h-[36vh] overflow-y-auto">
+            <h3 className="text-3xl font-bold uppercase text-arena-text mb-3">
+              Debate Concluded
+            </h3>
+            <p className="text-xl text-gray-300 mb-2">Winner: {winnerName}</p>
+            <p className="text-lg text-gray-400 mb-6 leading-relaxed">
+              Review mode is active. Full transcript playback can be added next,
+              while this panel keeps the duel state visible and lets you start a
+              new match.
+            </p>
+            <button
+              type="button"
+              onClick={onRestart}
+              className="px-6 py-3 text-2xl border-4 border-arena-green text-arena-green hover:bg-arena-green hover:text-black transition-colors"
+            >
+              NEW DUEL
+            </button>
+          </div>
+        ) : (
+          <DialogueBox
+            speakerName={speakerName}
+            rawText={rawText}
+            isJudge={isJudge}
+            onTypingChange={setIsTyping}
+          />
+        )}
       </div>
 
       {/* Full-Screen Verdict Modal */}
-      {isComplete && verdict && (
+      {isComplete && verdict && showVerdictModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
           <motion.div
             initial={{ opacity: 0 }}
@@ -168,6 +211,23 @@ export function CombatScreen({
                   {verdict.fighter_b_critique}
                 </p>
               </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t-2 border-yellow-500/30 flex flex-col md:flex-row gap-4 md:justify-end">
+              <button
+                type="button"
+                onClick={() => setShowVerdictModal(false)}
+                className="px-6 py-3 text-xl border-2 border-arena-blue text-arena-blue hover:bg-arena-blue hover:text-black transition-colors"
+              >
+                CLOSE & REVIEW DEBATE
+              </button>
+              <button
+                type="button"
+                onClick={onRestart}
+                className="px-6 py-3 text-xl border-2 border-arena-green text-arena-green hover:bg-arena-green hover:text-black transition-colors"
+              >
+                NEW DUEL
+              </button>
             </div>
           </motion.div>
         </div>

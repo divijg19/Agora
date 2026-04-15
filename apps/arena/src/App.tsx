@@ -24,6 +24,10 @@ function App() {
     setMatchConfig({ id, topic, fighterA, fighterB });
   };
 
+  const handleReset = () => {
+    setMatchConfig(null);
+  };
+
   return (
     <>
       <div className="crt-overlay" />
@@ -40,6 +44,7 @@ function App() {
               topic={matchConfig.topic}
               fighterAId={matchConfig.fighterA}
               fighterBId={matchConfig.fighterB}
+              onRestart={handleReset}
             />
           )}
         </AnimatePresence>
