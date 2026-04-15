@@ -1,16 +1,19 @@
 {
-	"name": "agora-monorepo",
-	"version": "0.0.1",
-	"private": true,
-	"scripts": {
-		"dev:engine": "cd apps/engine && uv run uvicorn main:app --reload --port 8000",
-		"dev:arena": "cd apps/arena && bun run dev",
-		"dev": "concurrently \"bun run dev:engine\" \"bun run dev:arena\""
-	},
-	"devDependencies": {
-		"concurrently": "^9.2.1"
-	},
-	"dependencies": {
-		"@biomejs/biome": "^2.4.11"
-	}
+  "name": "agora-monorepo",
+  "version": "0.0.1",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:engine": "cd apps/engine && uv run uvicorn main:app --reload --port 8000",
+    "dev:arena": "cd apps/arena && bun run dev",
+    "dev": "concurrently \"bun run dev:engine\" \"bun run dev:arena\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "@biomejs/biome": "^2.4.12"
+  }
 }
