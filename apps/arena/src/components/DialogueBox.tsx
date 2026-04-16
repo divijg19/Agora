@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTypewriter } from "../hooks/useTypewriter";
 
 interface DialogueBoxProps {
@@ -7,6 +7,7 @@ interface DialogueBoxProps {
   rawText: string;
   isJudge?: boolean;
   onTypingChange?: (isTyping: boolean) => void;
+  onTypingComplete?: () => void;
 }
 
 export function DialogueBox({
@@ -14,13 +15,29 @@ export function DialogueBox({
   rawText,
   isJudge = false,
   onTypingChange,
+  onTypingComplete,
 }: DialogueBoxProps) {
   // The typewriter hook drips the text out at retro speed
   const { displayedText, isTyping } = useTypewriter(rawText, 20);
+  const completedTextRef = useRef<string | null>(null);
 
   useEffect(() => {
     onTypingChange?.(isTyping);
   }, [isTyping, onTypingChange]);
+
+  useEffect(() => {
+    if (rawText === "") {
+      completedTextRef.current = null;
+      return;
+    }
+
+    const hasCompleted = !isTyping && displayedText === rawText;
+    if (!hasCompleted) return;
+
+    if (completedTextRef.current === rawText) return;
+    completedTextRef.current = rawText;
+    onTypingComplete?.();
+  }, [displayedText, isTyping, rawText, onTypingComplete]);
 
   return (
     <div
@@ -46,7 +63,7 @@ export function DialogueBox({
       </AnimatePresence>
 
       {/* The Text */}
-      <div className="text-2xl leading-relaxed tracking-wide">
+      <div className="text-2xl leading-relaxed tracking-wide max-h-[30vh] overflow-y-auto pr-2">
         {displayedText}
         {/* Blinking Cursor */}
         <motion.span

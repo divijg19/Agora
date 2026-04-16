@@ -14,86 +14,84 @@ export interface MatchVerdict {
   punchline_reasoning: string;
 }
 
-export interface TranscriptTurn {
+export interface NetworkTurn {
   id: string;
-  speaker: string;
+  speaker_id: string;
   text: string;
+  intent: string;
 }
 
 export function useEngineStream(matchId: string | null) {
   const [status, setStatus] = useState<ArenaStatus>("idle");
-  const [currentSpeaker, setCurrentSpeaker] = useState<string | null>(null);
-  const [currentIntent, setCurrentIntent] = useState<string | null>(null);
-  const [rawText, setRawText] = useState<string>("");
-  const [transcript, setTranscript] = useState<TranscriptTurn[]>([]);
+  const [networkTurns, setNetworkTurns] = useState<NetworkTurn[]>([]);
+  const [visualTurnIndex, setVisualTurnIndex] = useState(0);
   const [verdict, setVerdict] = useState<MatchVerdict | null>(null);
   const [turnCount, setTurnCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const eventSourceRef = useRef<EventSource | null>(null);
   const hasCompletedRef = useRef(false);
-  const currentSpeakerRef = useRef<string | null>(null);
-  const transcriptIdRef = useRef(0);
+  const pendingTurnRef = useRef<{
+    speaker_id: string;
+    intent: string;
+  } | null>(null);
+  const turnIdRef = useRef(0);
 
   useEffect(() => {
     if (!matchId) return;
 
     setStatus("debating");
-    setCurrentSpeaker(null);
-    setCurrentIntent(null);
-    setRawText("");
-    setTranscript([]);
+    setNetworkTurns([]);
+    setVisualTurnIndex(0);
     setVerdict(null);
     setTurnCount(0);
     setErrorMessage(null);
     hasCompletedRef.current = false;
-    currentSpeakerRef.current = null;
-    transcriptIdRef.current = 0;
+    pendingTurnRef.current = null;
+    turnIdRef.current = 0;
 
     const sse = new EventSource(`http://localhost:8000/api/stream/${matchId}`);
     eventSourceRef.current = sse;
 
     sse.addEventListener("turn_start", (e) => {
       const data: { speaker_id: string; intent?: string } = JSON.parse(e.data);
-      setCurrentSpeaker(data.speaker_id);
-      currentSpeakerRef.current = data.speaker_id;
-      setCurrentIntent(data.intent || "opening");
-      setRawText(""); // Clear dialogue box for new turn
+      pendingTurnRef.current = {
+        speaker_id: data.speaker_id,
+        intent: data.intent || "opening",
+      };
       setTurnCount((prev) => prev + 1);
     });
 
-    sse.addEventListener("chunk", (e) => {
-      const data = JSON.parse(e.data);
-      setRawText((prev) => prev + data.text);
+    sse.addEventListener("chunk", () => {
+      // Chunks are intentionally ignored for visual rendering.
+      // We only stage complete turns from `turn_end` events.
     });
 
     sse.addEventListener("turn_end", (e) => {
       const data: { text: string } = JSON.parse(e.data);
-      const speaker = currentSpeakerRef.current;
-      if (!speaker) return;
+      const pending = pendingTurnRef.current;
+      if (!pending) return;
 
-      setTranscript((prev) => [
+      setNetworkTurns((prev) => [
         ...prev,
         {
-          id: `${speaker}-${transcriptIdRef.current++}`,
-          speaker,
+          id: `turn-${turnIdRef.current++}`,
+          speaker_id: pending.speaker_id,
+          intent: pending.intent,
           text: data.text,
         },
       ]);
+      pendingTurnRef.current = null;
     });
 
     sse.addEventListener("judge_evaluating", () => {
       setStatus("judging");
-      setCurrentSpeaker("judge");
-      setCurrentIntent(null);
-      setRawText("THE JUDGE IS EVALUATING THE DUEL...");
     });
 
     sse.addEventListener("match_result", (e) => {
       const data: MatchVerdict = JSON.parse(e.data);
       setVerdict(data);
       setStatus("completed");
-      setCurrentIntent(null);
       hasCompletedRef.current = true;
       sse.close();
     });
@@ -112,12 +110,21 @@ export function useEngineStream(matchId: string | null) {
     };
   }, [matchId]);
 
+  const activeTurn = networkTurns[visualTurnIndex];
+  const currentSpeaker = activeTurn?.speaker_id || null;
+  const currentIntent = activeTurn?.intent || null;
+  const rawText = activeTurn?.text || "";
+
+  const advanceVisualTurn = () => setVisualTurnIndex((prev) => prev + 1);
+
   return {
     status,
     currentSpeaker,
     currentIntent,
     rawText,
-    transcript,
+    networkTurns,
+    visualTurnIndex,
+    advanceVisualTurn,
     verdict,
     turnCount,
     errorMessage,
