@@ -25,6 +25,7 @@ export function CombatScreen({
     currentSpeaker,
     currentIntent,
     rawText,
+    transcript,
     verdict,
     turnCount,
     errorMessage,
@@ -64,7 +65,9 @@ export function CombatScreen({
 
   // Calculate HP for game feel (Loser drops to 0 at the end)
   const isComplete = status === "completed" && verdict !== null;
-  const modalOpen = isComplete && userVote !== null && showVerdictModal;
+  const modalOpen = isComplete && showVerdictModal;
+  const fighterABorderClass = fighterA.color.replace("bg-", "border-");
+  const fighterBBorderClass = fighterB.color.replace("bg-", "border-");
   const hpA =
     isComplete && userVote
       ? verdict.winner_id === fighterA.id
@@ -172,123 +175,7 @@ export function CombatScreen({
       </div>
 
       {/* The Dialogue & Verdict Area */}
-      {isComplete ? (
-        <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="border-4 border-yellow-500 bg-black p-6 shadow-[0_0_30px_rgba(234,179,8,0.2)] max-h-[40vh] overflow-y-auto w-full relative z-20"
-        >
-          {/* Stage 1: The User Vote */}
-          {!userVote ? (
-            <div className="flex flex-col items-center py-4">
-              <h2 className="text-4xl text-arena-text mb-2 tracking-widest uppercase">
-                THE DEBATE HAS CONCLUDED
-              </h2>
-              <p className="text-xl text-yellow-500 mb-8 animate-pulse">
-                WHO WON? CAST YOUR VOTE.
-              </p>
-
-              <div className="flex gap-8 w-full justify-center">
-                <button
-                  type="button"
-                  onClick={() => setUserVote(fighterA.id)}
-                  className={`px-8 py-6 border-4 ${fighterA.color.replace("bg-", "border-")} hover:bg-gray-800 transition-colors flex flex-col items-center w-64`}
-                >
-                  <span className="text-4xl mb-2">{fighterA.avatar}</span>
-                  <span className="text-xl font-bold uppercase">
-                    {fighterA.name}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setUserVote(fighterB.id)}
-                  className={`px-8 py-6 border-4 ${fighterB.color.replace("bg-", "border-")} hover:bg-gray-800 transition-colors flex flex-col items-center w-64`}
-                >
-                  <span className="text-4xl mb-2">{fighterB.avatar}</span>
-                  <span className="text-xl font-bold uppercase">
-                    {fighterB.name}
-                  </span>
-                </button>
-              </div>
-            </div>
-          ) : showVerdictModal ? (
-            /* Stage 2: The Final Reveal */
-            <>
-              <div className="flex justify-between items-center border-b-2 border-yellow-500/30 pb-4 mb-6">
-                <h2 className="text-4xl text-yellow-500 text-center grow">
-                  🏆 WINNER: {winnerName} 🏆
-                </h2>
-                {/* User Vote Comparison Badge */}
-                <div
-                  className={`px-4 py-2 border-2 uppercase font-bold ${userVote === verdict.winner_id ? "border-arena-green text-arena-green" : "border-arena-red text-arena-red"}`}
-                >
-                  {userVote === verdict.winner_id
-                    ? "YOU AGREED"
-                    : "JUDGE DISAGREES"}
-                </div>
-              </div>
-
-              <p className="text-2xl mb-8 leading-relaxed text-center font-bold">
-                "{verdict.punchline_reasoning}"
-              </p>
-
-              {/* Critique Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div
-                  className={`p-4 border-2 ${verdict.winner_id === fighterA.id ? "border-arena-green" : "border-arena-red"}`}
-                >
-                  <h3 className="text-xl font-bold mb-2 uppercase text-gray-400">
-                    {fighterA.name} Critique:
-                  </h3>
-                  <p className="text-lg text-gray-300">
-                    {verdict.fighter_a_critique}
-                  </p>
-                </div>
-                <div
-                  className={`p-4 border-2 ${verdict.winner_id === fighterB.id ? "border-arena-green" : "border-arena-red"}`}
-                >
-                  <h3 className="text-xl font-bold mb-2 uppercase text-gray-400">
-                    {fighterB.name} Critique:
-                  </h3>
-                  <p className="text-lg text-gray-300">
-                    {verdict.fighter_b_critique}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex justify-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => setShowVerdictModal(false)}
-                  className="px-6 py-2 border-2 border-gray-400 text-gray-400 hover:text-white hover:border-white transition-colors"
-                >
-                  REVIEW TRANSCRIPT
-                </button>
-                <button
-                  type="button"
-                  onClick={onRestart}
-                  className="px-6 py-2 border-2 border-arena-blue text-arena-blue hover:bg-arena-blue hover:text-white transition-colors font-bold"
-                >
-                  NEW DUEL
-                </button>
-              </div>
-            </>
-          ) : (
-            /* Stage 3: Review Mode */
-            <div className="text-center py-8">
-              <h2 className="text-3xl text-gray-400 mb-6">DEBATE CONCLUDED</h2>
-              <p className="text-xl mb-8">The transcript is available above.</p>
-              <button
-                type="button"
-                onClick={onRestart}
-                className="px-8 py-3 border-2 border-arena-blue text-arena-blue hover:bg-arena-blue hover:text-white transition-colors text-xl font-bold"
-              >
-                START NEW DUEL
-              </button>
-            </div>
-          )}
-        </motion.div>
-      ) : (
+      {!isComplete ? (
         <div className="w-full relative z-20">
           <DialogueBox
             speakerName={speakerName}
@@ -296,6 +183,167 @@ export function CombatScreen({
             isJudge={isJudge}
             onTypingChange={setIsTyping}
           />
+        </div>
+      ) : !showVerdictModal ? (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="w-full h-[40vh] border-4 border-arena-border bg-black/90 p-4 md:p-6 flex flex-col relative z-20"
+        >
+          <h2 className="text-2xl md:text-3xl text-arena-text font-bold uppercase mb-4 text-center">
+            Full Debate Transcript
+          </h2>
+
+          <div className="flex-1 overflow-y-auto pr-1 space-y-4">
+            {transcript.map((turn) => {
+              const isSpeakerA = turn.speaker === fighterA.id;
+              const bubbleBorderClass = isSpeakerA
+                ? fighterABorderClass
+                : fighterBBorderClass;
+              const speakerLabel = isSpeakerA
+                ? fighterA.name
+                : turn.speaker === fighterB.id
+                  ? fighterB.name
+                  : turn.speaker;
+
+              return (
+                <div
+                  key={turn.id}
+                  className={`flex ${isSpeakerA ? "justify-start" : "justify-end"}`}
+                >
+                  <div
+                    className={`max-w-[75%] border-4 ${bubbleBorderClass} bg-neutral-950 px-4 py-3`}
+                  >
+                    <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">
+                      {speakerLabel}
+                    </p>
+                    <p className="text-lg leading-relaxed whitespace-pre-wrap">
+                      {turn.text}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 pt-4 border-t-2 border-arena-border shrink-0 bg-black">
+            <button
+              type="button"
+              onClick={onRestart}
+              className="w-full px-8 py-3 border-2 border-arena-blue text-arena-blue hover:bg-arena-blue hover:text-white transition-colors text-xl font-bold uppercase"
+            >
+              START NEW DUEL
+            </button>
+          </div>
+        </motion.div>
+      ) : null}
+
+      {isComplete && showVerdictModal && verdict && (
+        <div
+          className={`absolute inset-0 z-40 flex items-center justify-center p-4 ${
+            !userVote ? "bg-black/90 backdrop-blur-sm" : "bg-black/80"
+          }`}
+        >
+          <motion.div
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="w-full max-w-5xl border-4 border-yellow-500 bg-black p-6 md:p-8 shadow-[0_0_30px_rgba(234,179,8,0.25)] max-h-[70vh] overflow-y-auto"
+          >
+            {!userVote ? (
+              <div className="flex flex-col items-center py-2 md:py-6">
+                <h2 className="text-3xl md:text-4xl text-arena-text mb-2 tracking-widest uppercase text-center">
+                  THE DEBATE HAS CONCLUDED
+                </h2>
+                <p className="text-xl text-yellow-500 mb-8 animate-pulse text-center">
+                  WHO WON? CAST YOUR VOTE.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                  <motion.button
+                    type="button"
+                    onClick={() => setUserVote(fighterA.id)}
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    className={`px-8 py-6 border-[6px] ${fighterABorderClass} bg-neutral-900 hover:bg-neutral-800 transition-colors flex flex-col items-center w-full`}
+                  >
+                    <span className="text-5xl mb-2">{fighterA.avatar}</span>
+                    <span className="text-xl font-bold uppercase">
+                      {fighterA.name}
+                    </span>
+                  </motion.button>
+                  <motion.button
+                    type="button"
+                    onClick={() => setUserVote(fighterB.id)}
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    className={`px-8 py-6 border-[6px] ${fighterBBorderClass} bg-neutral-900 hover:bg-neutral-800 transition-colors flex flex-col items-center w-full`}
+                  >
+                    <span className="text-5xl mb-2">{fighterB.avatar}</span>
+                    <span className="text-xl font-bold uppercase">
+                      {fighterB.name}
+                    </span>
+                  </motion.button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-center border-b-2 border-yellow-500/30 pb-4 mb-6">
+                  <h2 className="text-3xl md:text-4xl text-yellow-500 text-center grow uppercase">
+                    Winner: {winnerName}
+                  </h2>
+                  <div
+                    className={`px-4 py-2 border-2 uppercase font-bold ${userVote === verdict.winner_id ? "border-arena-green text-arena-green" : "border-arena-red text-arena-red"}`}
+                  >
+                    {userVote === verdict.winner_id
+                      ? "YOU AGREED"
+                      : "JUDGE DISAGREES"}
+                  </div>
+                </div>
+
+                <p className="text-xl md:text-2xl mb-8 leading-relaxed text-center font-bold">
+                  "{verdict.punchline_reasoning}"
+                </p>
+
+                <div className="grid grid-cols-2 gap-6 mb-8">
+                  <div
+                    className={`p-4 border-2 ${verdict.winner_id === fighterA.id ? "border-arena-green" : "border-arena-red"}`}
+                  >
+                    <h3 className="text-xl font-bold mb-2 uppercase text-gray-400">
+                      {fighterA.name} Critique:
+                    </h3>
+                    <p className="text-lg text-gray-300 leading-relaxed">
+                      {verdict.fighter_a_critique}
+                    </p>
+                  </div>
+                  <div
+                    className={`p-4 border-2 ${verdict.winner_id === fighterB.id ? "border-arena-green" : "border-arena-red"}`}
+                  >
+                    <h3 className="text-xl font-bold mb-2 uppercase text-gray-400">
+                      {fighterB.name} Critique:
+                    </h3>
+                    <p className="text-lg text-gray-300 leading-relaxed">
+                      {verdict.fighter_b_critique}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col md:flex-row justify-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowVerdictModal(false)}
+                    className="px-6 py-3 border-2 border-gray-400 text-gray-300 hover:text-white hover:border-white transition-colors uppercase"
+                  >
+                    CLOSE & REVIEW DEBATE
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onRestart}
+                    className="px-6 py-3 border-2 border-arena-blue text-arena-blue hover:bg-arena-blue hover:text-white transition-colors font-bold uppercase"
+                  >
+                    START NEW DUEL
+                  </button>
+                </div>
+              </>
+            )}
+          </motion.div>
         </div>
       )}
 

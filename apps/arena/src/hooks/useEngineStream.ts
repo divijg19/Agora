@@ -14,17 +14,26 @@ export interface MatchVerdict {
   punchline_reasoning: string;
 }
 
+export interface TranscriptTurn {
+  id: string;
+  speaker: string;
+  text: string;
+}
+
 export function useEngineStream(matchId: string | null) {
   const [status, setStatus] = useState<ArenaStatus>("idle");
   const [currentSpeaker, setCurrentSpeaker] = useState<string | null>(null);
   const [currentIntent, setCurrentIntent] = useState<string | null>(null);
   const [rawText, setRawText] = useState<string>("");
+  const [transcript, setTranscript] = useState<TranscriptTurn[]>([]);
   const [verdict, setVerdict] = useState<MatchVerdict | null>(null);
   const [turnCount, setTurnCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const eventSourceRef = useRef<EventSource | null>(null);
   const hasCompletedRef = useRef(false);
+  const currentSpeakerRef = useRef<string | null>(null);
+  const transcriptIdRef = useRef(0);
 
   useEffect(() => {
     if (!matchId) return;
@@ -33,10 +42,13 @@ export function useEngineStream(matchId: string | null) {
     setCurrentSpeaker(null);
     setCurrentIntent(null);
     setRawText("");
+    setTranscript([]);
     setVerdict(null);
     setTurnCount(0);
     setErrorMessage(null);
     hasCompletedRef.current = false;
+    currentSpeakerRef.current = null;
+    transcriptIdRef.current = 0;
 
     const sse = new EventSource(`http://localhost:8000/api/stream/${matchId}`);
     eventSourceRef.current = sse;
@@ -44,6 +56,7 @@ export function useEngineStream(matchId: string | null) {
     sse.addEventListener("turn_start", (e) => {
       const data: { speaker_id: string; intent?: string } = JSON.parse(e.data);
       setCurrentSpeaker(data.speaker_id);
+      currentSpeakerRef.current = data.speaker_id;
       setCurrentIntent(data.intent || "opening");
       setRawText(""); // Clear dialogue box for new turn
       setTurnCount((prev) => prev + 1);
@@ -52,6 +65,21 @@ export function useEngineStream(matchId: string | null) {
     sse.addEventListener("chunk", (e) => {
       const data = JSON.parse(e.data);
       setRawText((prev) => prev + data.text);
+    });
+
+    sse.addEventListener("turn_end", (e) => {
+      const data: { text: string } = JSON.parse(e.data);
+      const speaker = currentSpeakerRef.current;
+      if (!speaker) return;
+
+      setTranscript((prev) => [
+        ...prev,
+        {
+          id: `${speaker}-${transcriptIdRef.current++}`,
+          speaker,
+          text: data.text,
+        },
+      ]);
     });
 
     sse.addEventListener("judge_evaluating", () => {
@@ -89,6 +117,7 @@ export function useEngineStream(matchId: string | null) {
     currentSpeaker,
     currentIntent,
     rawText,
+    transcript,
     verdict,
     turnCount,
     errorMessage,
