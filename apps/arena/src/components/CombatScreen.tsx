@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useEngineStream } from "../hooks/useEngineStream";
 import type { FighterDef } from "../types/fighter";
 import { DialogueBox } from "./DialogueBox";
@@ -25,7 +25,9 @@ export function CombatScreen({
     currentSpeaker,
     currentIntent,
     rawText,
-    transcript,
+    networkTurns,
+    visualTurnIndex,
+    advanceVisualTurn,
     verdict,
     turnCount,
     errorMessage,
@@ -39,6 +41,15 @@ export function CombatScreen({
   const [activeIntentVisual, setActiveIntentVisual] = useState<string | null>(
     null,
   );
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (advanceTimerRef.current) {
+        clearTimeout(advanceTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isTyping) {
@@ -64,10 +75,17 @@ export function CombatScreen({
   if (isJudge) speakerName = "THE JUDGE";
 
   // Calculate HP for game feel (Loser drops to 0 at the end)
-  const isComplete = status === "completed" && verdict !== null;
+  const hasBufferedTurnAhead = visualTurnIndex < networkTurns.length - 1;
+  const isComplete =
+    status === "completed" &&
+    verdict !== null &&
+    !hasBufferedTurnAhead &&
+    !isTyping;
   const modalOpen = isComplete && showVerdictModal;
   const fighterABorderClass = fighterA.color.replace("bg-", "border-");
   const fighterBBorderClass = fighterB.color.replace("bg-", "border-");
+  const fighterALeftBorderClass = fighterA.color.replace("bg-", "border-l-");
+  const fighterBRightBorderClass = fighterB.color.replace("bg-", "border-r-");
   const hpA =
     isComplete && userVote
       ? verdict.winner_id === fighterA.id
@@ -182,60 +200,20 @@ export function CombatScreen({
             rawText={rawText}
             isJudge={isJudge}
             onTypingChange={setIsTyping}
+            onTypingComplete={() => {
+              if (visualTurnIndex < networkTurns.length - 1) {
+                if (advanceTimerRef.current) {
+                  clearTimeout(advanceTimerRef.current);
+                }
+
+                advanceTimerRef.current = setTimeout(() => {
+                  advanceVisualTurn();
+                  advanceTimerRef.current = null;
+                }, 1500);
+              }
+            }}
           />
         </div>
-      ) : !showVerdictModal ? (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="w-full h-[40vh] border-4 border-arena-border bg-black/90 p-4 md:p-6 flex flex-col relative z-20"
-        >
-          <h2 className="text-2xl md:text-3xl text-arena-text font-bold uppercase mb-4 text-center">
-            Full Debate Transcript
-          </h2>
-
-          <div className="flex-1 overflow-y-auto pr-1 space-y-4">
-            {transcript.map((turn) => {
-              const isSpeakerA = turn.speaker === fighterA.id;
-              const bubbleBorderClass = isSpeakerA
-                ? fighterABorderClass
-                : fighterBBorderClass;
-              const speakerLabel = isSpeakerA
-                ? fighterA.name
-                : turn.speaker === fighterB.id
-                  ? fighterB.name
-                  : turn.speaker;
-
-              return (
-                <div
-                  key={turn.id}
-                  className={`flex ${isSpeakerA ? "justify-start" : "justify-end"}`}
-                >
-                  <div
-                    className={`max-w-[75%] border-4 ${bubbleBorderClass} bg-neutral-950 px-4 py-3`}
-                  >
-                    <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">
-                      {speakerLabel}
-                    </p>
-                    <p className="text-lg leading-relaxed whitespace-pre-wrap">
-                      {turn.text}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-4 pt-4 border-t-2 border-arena-border shrink-0 bg-black">
-            <button
-              type="button"
-              onClick={onRestart}
-              className="w-full px-8 py-3 border-2 border-arena-blue text-arena-blue hover:bg-arena-blue hover:text-white transition-colors text-xl font-bold uppercase"
-            >
-              START NEW DUEL
-            </button>
-          </div>
-        </motion.div>
       ) : null}
 
       {isComplete && showVerdictModal && verdict && (
@@ -344,6 +322,52 @@ export function CombatScreen({
               </>
             )}
           </motion.div>
+        </div>
+      )}
+
+      {isComplete && !showVerdictModal && (
+        <div className="absolute inset-0 bg-black/95 z-50 overflow-y-auto p-10">
+          <div className="sticky top-0 bg-black/95 pb-6 mb-6 border-b-2 border-arena-border flex flex-col md:flex-row justify-between items-center gap-4">
+            <h2 className="text-3xl md:text-4xl text-arena-text font-bold uppercase">
+              Debate Playback Review
+            </h2>
+            <button
+              type="button"
+              onClick={onRestart}
+              className="px-8 py-4 border-4 border-arena-blue text-arena-blue hover:bg-arena-blue hover:text-white transition-colors text-2xl font-bold uppercase"
+            >
+              START NEW DUEL
+            </button>
+          </div>
+
+          <div className="space-y-6 pb-6">
+            {networkTurns.map((turn) => {
+              const isSpeakerA = turn.speaker_id === fighterA.id;
+              const speakerLabel = isSpeakerA
+                ? fighterA.name
+                : turn.speaker_id === fighterB.id
+                  ? fighterB.name
+                  : turn.speaker_id;
+
+              return (
+                <div
+                  key={turn.id}
+                  className={`max-w-4xl ${
+                    isSpeakerA
+                      ? `mr-auto text-left border-l-4 pl-4 ${fighterALeftBorderClass}`
+                      : `ml-auto text-right border-r-4 pr-4 ${fighterBRightBorderClass}`
+                  }`}
+                >
+                  <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">
+                    {speakerLabel}
+                  </p>
+                  <p className="text-xl leading-relaxed whitespace-pre-wrap bg-black/70 p-4">
+                    {turn.text}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
