@@ -1,56 +1,76 @@
 import { useEffect, useRef, useState } from "react";
 
-export function useTypewriter(rawText: string, speedMs: number = 25) {
+export function useTypewriter(rawText: string, speedMs: number = 20) {
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const currentIndex = useRef(0);
-
-  useEffect(() => {
-    if (rawText === "") {
-      setDisplayedText(rawText);
-      currentIndex.current = 0;
-      setIsTyping(false);
-    } else {
-      setIsTyping(currentIndex.current < rawText.length);
-    }
-  }, [rawText]);
+  const queueRef = useRef<string[]>([]);
+  const processedLengthRef = useRef(0);
+  const processedTextRef = useRef("");
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (speedMs <= 0) {
+      queueRef.current = [];
+      processedLengthRef.current = rawText.length;
+      processedTextRef.current = rawText;
       setDisplayedText(rawText);
-      currentIndex.current = rawText.length;
       setIsTyping(false);
       return;
     }
 
-    if (currentIndex.current >= rawText.length) {
+    if (rawText === "") {
+      queueRef.current = [];
+      processedLengthRef.current = 0;
+      processedTextRef.current = "";
+      setDisplayedText("");
       setIsTyping(false);
       return;
     }
 
-    setIsTyping(true);
-    const interval = setInterval(() => {
-      setDisplayedText((prev) => {
-        if (currentIndex.current >= rawText.length) {
-          setIsTyping(false);
-          clearInterval(interval);
-          return prev;
-        }
+    if (!rawText.startsWith(processedTextRef.current)) {
+      queueRef.current = [];
+      processedLengthRef.current = 0;
+      processedTextRef.current = "";
+      setDisplayedText("");
+    }
 
-        const next = prev + rawText[currentIndex.current];
-        currentIndex.current += 1;
+    const nextChunk = rawText.slice(processedLengthRef.current);
+    if (nextChunk.length > 0) {
+      queueRef.current.push(...nextChunk.split(""));
+      processedLengthRef.current = rawText.length;
+      processedTextRef.current = rawText;
+      setIsTyping(true);
+      return;
+    }
 
-        if (currentIndex.current >= rawText.length) {
-          setIsTyping(false);
-          clearInterval(interval);
-        }
+    if (queueRef.current.length === 0) {
+      setIsTyping(false);
+    }
+  }, [rawText, speedMs]);
 
-        return next;
-      });
+  useEffect(() => {
+    if (speedMs <= 0) {
+      return;
+    }
+
+    intervalRef.current = setInterval(() => {
+      const nextChar = queueRef.current.shift();
+      if (!nextChar) {
+        setIsTyping(false);
+        return;
+      }
+
+      setDisplayedText((prev) => prev + nextChar);
+      setIsTyping(queueRef.current.length > 0);
     }, speedMs);
 
-    return () => clearInterval(interval);
-  }, [rawText, speedMs]);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [speedMs]);
 
   return { displayedText, isTyping };
 }
