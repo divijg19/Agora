@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import type { FighterDef } from "../types/fighter";
 
 interface FighterSpriteProps {
@@ -20,6 +21,32 @@ export function FighterSprite({
   isIntroPlaying,
   isBeingAttacked = false,
 }: FighterSpriteProps) {
+  const [isStunned, setIsStunned] = useState(false);
+  const [showCallout, setShowCallout] = useState(false);
+
+  useEffect(() => {
+    if (isBeingAttacked) {
+      setIsStunned(true);
+      const timer = setTimeout(() => setIsStunned(false), 800);
+      return () => clearTimeout(timer);
+    }
+
+    setIsStunned(false);
+  }, [isBeingAttacked]);
+
+  useEffect(() => {
+    if (
+      isActive &&
+      (currentIntent === "counter" || currentIntent === "rebuttal")
+    ) {
+      setShowCallout(true);
+      const timer = setTimeout(() => setShowCallout(false), 1500);
+      return () => clearTimeout(timer);
+    }
+
+    setShowCallout(false);
+  }, [isActive, currentIntent]);
+
   const isAttack =
     isActive && (currentIntent === "counter" || currentIntent === "rebuttal");
 
@@ -43,15 +70,18 @@ export function FighterSprite({
       };
       spriteTransition = { repeat: Infinity, duration: 1.5, ease: "easeInOut" };
     }
-  } else if (isBeingAttacked) {
+  } else if (isStunned) {
     // The Hit Stun State
     spriteAnimation = {
-      x: facing === "right" ? [-10, 10, -10, 10, -5] : [10, -10, 10, -10, 5],
+      x:
+        facing === "right"
+          ? [-10, 10, -10, 10, -5, 0]
+          : [10, -10, 10, -10, 5, 0],
       y: 0,
       scale: 0.95,
       filter: "brightness(0.6) sepia(1) hue-rotate(-50deg) saturate(5)",
     };
-    spriteTransition = { repeat: Infinity, duration: 0.2, ease: "linear" };
+    spriteTransition = { duration: 0.4, ease: "linear" };
   } else {
     spriteAnimation = {
       x: 0,
@@ -70,7 +100,7 @@ export function FighterSprite({
       initial={{ x: facing === "right" ? -300 : 300, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: "spring", damping: 15, stiffness: 100, delay: 0.5 }}
-      className="flex flex-col items-center z-10"
+      className="flex flex-col items-center z-10 relative"
     >
       {/* Dynamic Health Bar */}
       <div
@@ -90,7 +120,7 @@ export function FighterSprite({
       <motion.div
         animate={spriteAnimation}
         transition={spriteTransition}
-        className={`w-32 h-40 border-4 bg-gradient-to-b from-gray-800 to-black flex items-center justify-center relative overflow-hidden ${borderColorClass}`}
+        className={`w-32 h-40 border-4 bg-linear-to-b from-gray-800 to-black flex items-center justify-center relative overflow-hidden ${borderColorClass}`}
       >
         {/* Retro scanline overlay just for the portrait */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0)_50%,rgba(0,0,0,0.25)_50%)] bg-size-[100%_4px] pointer-events-none z-10" />
@@ -106,6 +136,38 @@ export function FighterSprite({
           {fighter.avatar}
         </div>
       </motion.div>
+
+      {/* Floating Arcade Callout */}
+      <AnimatePresence>
+        {showCallout && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.5 }}
+            animate={{
+              opacity: [0, 1, 1, 0],
+              y: -80,
+              scale: [0.5, 1.5, 1.2, 1],
+            }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 1.5,
+              times: [0, 0.2, 0.8, 1],
+              ease: "easeOut",
+            }}
+            className={`absolute top-0 z-50 pointer-events-none ${
+              facing === "right" ? "right-0 -mr-20" : "left-0 -ml-20"
+            }`}
+          >
+            <span
+              className="text-5xl font-black italic uppercase tracking-tighter drop-shadow-[0_5px_0_rgba(0,0,0,1)] text-white"
+              style={{
+                WebkitTextStroke: `2px ${currentIntent === "counter" ? "#ff3c3c" : "#eab308"}`,
+              }}
+            >
+              {currentIntent === "counter" ? "COUNTER!" : "OBJECTION!"}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Name Tag */}
       <div
