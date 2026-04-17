@@ -179,6 +179,7 @@ export function CombatScreen({
           hp={hpA}
           currentIntent={activeIntentVisual}
           isIntroPlaying={isIntroPlaying}
+          isBeingAttacked={isBSpeaking && isAttack}
         />
 
         {/* VS or Judge Graphic */}
@@ -217,6 +218,7 @@ export function CombatScreen({
           hp={hpB}
           currentIntent={activeIntentVisual}
           isIntroPlaying={isIntroPlaying}
+          isBeingAttacked={isASpeaking && isAttack}
         />
       </div>
 
