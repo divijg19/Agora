@@ -141,11 +141,15 @@ export function CombatScreen({
       }
       className="max-w-6xl w-full mx-auto p-4 flex flex-col justify-between h-[85vh] relative z-10"
     >
-      {/* 3D Synthwave Grid Background (Pure CSS) */}
+      {/* 3D Synthwave Grid Background (Animated Camera Pan) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 opacity-20">
         <div className="absolute bottom-0 left-0 right-0 h-[40vh] bg-linear-to-t from-arena-blue/30 to-transparent" />
-        <div
-          className="w-full h-[50vh] absolute bottom-0"
+        <motion.div
+          className="w-[200%] h-[50vh] absolute bottom-0 -left-[50%]"
+          animate={{
+            x: isASpeaking ? "5%" : isBSpeaking ? "-5%" : "0%",
+          }}
+          transition={{ type: "spring", stiffness: 30, damping: 20 }}
           style={{
             backgroundImage:
               "linear-gradient(rgba(60, 130, 255, 0.4) 2px, transparent 2px), linear-gradient(90deg, rgba(60, 130, 255, 0.4) 2px, transparent 2px)",
@@ -180,7 +184,12 @@ export function CombatScreen({
       </AnimatePresence>
 
       {/* The Stage */}
-      <div
+      <motion.div
+        animate={{
+          scale: isASpeaking || isBSpeaking ? 1.02 : 1,
+          x: isASpeaking ? 10 : isBSpeaking ? -10 : 0,
+        }}
+        transition={{ type: "spring", stiffness: 40, damping: 25 }}
         className={`flex justify-between items-end px-10 grow mb-10 relative transition-all duration-300 ${
           modalOpen ? "opacity-60 blur-[1px]" : "opacity-100"
         }`}
@@ -233,7 +242,7 @@ export function CombatScreen({
           isIntroPlaying={isIntroPlaying}
           isBeingAttacked={isASpeaking && isAttack}
         />
-      </div>
+      </motion.div>
 
       {/* The Dialogue & Verdict Area */}
       <AnimatePresence>
