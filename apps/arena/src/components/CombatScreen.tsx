@@ -116,16 +116,29 @@ export function CombatScreen({
   const isAttack =
     (isASpeaking || isBSpeaking) &&
     (activeIntentVisual === "counter" || activeIntentVisual === "rebuttal");
+  const isKO = isComplete && userVote !== null;
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={
-        isAttack
-          ? { x: [-5, 5, -5, 5, 0], y: [-2, 2, -2, 2, 0], opacity: 1 }
-          : { x: 0, y: 0, opacity: 1 }
+        isKO
+          ? {
+              x: [-15, 15, -10, 10, -5, 5, 0],
+              y: [-5, 5, -5, 5, 0],
+              opacity: 1,
+            }
+          : isAttack
+            ? { x: [-5, 5, -5, 5, 0], y: [-2, 2, -2, 2, 0], opacity: 1 }
+            : { x: 0, y: 0, opacity: 1 }
       }
-      transition={isAttack ? { duration: 0.4 } : { duration: 0.5 }}
+      transition={
+        isKO
+          ? { duration: 0.8, ease: "easeOut" }
+          : isAttack
+            ? { duration: 0.4 }
+            : { duration: 0.5 }
+      }
       className="max-w-6xl w-full mx-auto p-4 flex flex-col justify-between h-[85vh] relative z-10"
     >
       {/* 3D Synthwave Grid Background (Pure CSS) */}
