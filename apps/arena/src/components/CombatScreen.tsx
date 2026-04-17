@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useEngineStream } from "../hooks/useEngineStream";
 import type { FighterDef } from "../types/fighter";
@@ -41,7 +41,16 @@ export function CombatScreen({
   const [activeIntentVisual, setActiveIntentVisual] = useState<string | null>(
     null,
   );
+  const [isIntroPlaying, setIsIntroPlaying] = useState(true);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsIntroPlaying(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -135,21 +144,27 @@ export function CombatScreen({
       </div>
 
       {/* Header Topic & Turn Indicator */}
-      <div
-        className={`text-center mb-8 border-b-2 border-arena-border pb-4 relative transition-all duration-300 ${
-          modalOpen ? "opacity-60 blur-[1px]" : "opacity-100"
-        }`}
-      >
-        <h2 className="text-xl text-gray-400">CURRENT DEBATE:</h2>
-        <h1 className="text-3xl text-arena-text font-bold uppercase">
-          {topic}
-        </h1>
-        {status === "debating" && turnCount > 0 && (
-          <div className="absolute right-0 top-0 text-arena-blue font-bold text-2xl border-2 border-arena-blue px-3 py-1">
-            TURN {turnCount}
-          </div>
+      <AnimatePresence>
+        {!isIntroPlaying && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`text-center mb-8 border-b-2 border-arena-border pb-4 relative transition-all duration-300 ${
+              modalOpen ? "opacity-60 blur-[1px]" : "opacity-100"
+            }`}
+          >
+            <h2 className="text-xl text-gray-400">CURRENT DEBATE:</h2>
+            <h1 className="text-3xl text-arena-text font-bold uppercase">
+              {topic}
+            </h1>
+            {status === "debating" && turnCount > 0 && (
+              <div className="absolute right-0 top-0 text-arena-blue font-bold text-2xl border-2 border-arena-blue px-3 py-1">
+                TURN {turnCount}
+              </div>
+            )}
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
 
       {/* The Stage */}
       <div
@@ -163,10 +178,11 @@ export function CombatScreen({
           facing="right"
           hp={hpA}
           currentIntent={activeIntentVisual}
+          isIntroPlaying={isIntroPlaying}
         />
 
         {/* VS or Judge Graphic */}
-        <div className="absolute left-1/2 bottom-20 -translate-x-1/2 flex flex-col items-center">
+        <div className="absolute left-1/2 bottom-20 -translate-x-1/2 flex flex-col items-center z-50 pointer-events-none">
           {status === "judging" && (
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
@@ -176,10 +192,21 @@ export function CombatScreen({
               EVALUATING...
             </motion.div>
           )}
-          {status === "debating" && (
-            <h1 className="text-6xl text-arena-red italic font-bold opacity-30">
+
+          {/* The Explosive VS Slam (Only during intro) */}
+          {isIntroPlaying && (
+            <motion.h1
+              initial={{ scale: 10, opacity: 0 }}
+              animate={{ scale: 1, opacity: [0, 1, 1, 0] }}
+              transition={{
+                duration: 2.5,
+                times: [0, 0.2, 0.8, 1],
+                ease: ["easeIn", "easeOut", "easeIn", "easeOut"],
+              }}
+              className="text-9xl text-arena-red italic font-bold drop-shadow-[0_0_30px_rgba(255,60,60,1)]"
+            >
               VS
-            </h1>
+            </motion.h1>
           )}
         </div>
 
@@ -189,32 +216,41 @@ export function CombatScreen({
           facing="left"
           hp={hpB}
           currentIntent={activeIntentVisual}
+          isIntroPlaying={isIntroPlaying}
         />
       </div>
 
       {/* The Dialogue & Verdict Area */}
-      {!isComplete ? (
-        <div className="w-full relative z-20">
-          <DialogueBox
-            speakerName={speakerName}
-            rawText={rawText}
-            isJudge={isJudge}
-            onTypingChange={setIsTyping}
-            onTypingComplete={() => {
-              if (visualTurnIndex < networkTurns.length - 1) {
-                if (advanceTimerRef.current) {
-                  clearTimeout(advanceTimerRef.current);
-                }
+      <AnimatePresence>
+        {!isIntroPlaying && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full relative z-20"
+          >
+            {!isComplete ? (
+              <DialogueBox
+                speakerName={speakerName}
+                rawText={rawText}
+                isJudge={isJudge}
+                onTypingChange={setIsTyping}
+                onTypingComplete={() => {
+                  if (visualTurnIndex < networkTurns.length - 1) {
+                    if (advanceTimerRef.current) {
+                      clearTimeout(advanceTimerRef.current);
+                    }
 
-                advanceTimerRef.current = setTimeout(() => {
-                  advanceVisualTurn();
-                  advanceTimerRef.current = null;
-                }, 1500);
-              }
-            }}
-          />
-        </div>
-      ) : null}
+                    advanceTimerRef.current = setTimeout(() => {
+                      advanceVisualTurn();
+                      advanceTimerRef.current = null;
+                    }, 1500);
+                  }
+                }}
+              />
+            ) : null}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {isComplete && showVerdictModal && verdict && (
         <div

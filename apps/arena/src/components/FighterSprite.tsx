@@ -7,6 +7,7 @@ interface FighterSpriteProps {
   facing: "left" | "right";
   hp: number;
   currentIntent?: string | null;
+  isIntroPlaying: boolean;
 }
 
 export function FighterSprite({
@@ -15,6 +16,7 @@ export function FighterSprite({
   facing,
   hp,
   currentIntent,
+  isIntroPlaying,
 }: FighterSpriteProps) {
   const isAttack =
     isActive && (currentIntent === "counter" || currentIntent === "rebuttal");
@@ -48,9 +50,18 @@ export function FighterSprite({
   const borderColorClass = fighter.color.replace("bg-", "border-");
 
   return (
-    <div className="flex flex-col items-center z-10">
+    <motion.div
+      initial={{ x: facing === "right" ? -300 : 300, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ type: "spring", damping: 15, stiffness: 100, delay: 0.5 }}
+      className="flex flex-col items-center z-10"
+    >
       {/* Dynamic Health Bar */}
-      <div className="w-48 h-6 border-4 border-arena-border bg-black mb-4 p-0.5 relative shadow-lg">
+      <div
+        className={`w-48 h-6 border-4 border-arena-border bg-black mb-4 p-0.5 relative shadow-lg transition-opacity duration-500 ${
+          isIntroPlaying ? "opacity-0" : "opacity-100"
+        }`}
+      >
         <motion.div
           initial={{ width: "100%" }}
           animate={{ width: `${hp}%` }}
@@ -96,6 +107,6 @@ export function FighterSprite({
       >
         {fighter.name}
       </div>
-    </div>
+    </motion.div>
   );
 }
