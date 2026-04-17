@@ -102,18 +102,30 @@ export function FighterSprite({
       transition={{ type: "spring", damping: 15, stiffness: 100, delay: 0.5 }}
       className="flex flex-col items-center z-10 relative"
     >
-      {/* Dynamic Health Bar */}
+      {/* 2D Fighting Game Health Bar */}
       <div
-        className={`w-48 h-6 border-4 border-arena-border bg-black mb-4 p-0.5 relative shadow-lg transition-opacity duration-500 ${
+        className={`w-48 h-6 border-4 border-arena-border bg-black mb-4 p-0.5 relative shadow-lg overflow-hidden transition-opacity duration-500 ${
           isIntroPlaying ? "opacity-0" : "opacity-100"
         }`}
       >
+        {/* The Slow Catch-Up Bar (Damage Indicator) */}
         <motion.div
           initial={{ width: "100%" }}
           animate={{ width: `${hp}%` }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
-          className={`h-full ${fighter.color} shadow-[inset_0_-4px_rgba(0,0,0,0.3)]`}
+          transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+          className="absolute top-0.5 left-0.5 bottom-0.5 right-0.5 bg-yellow-400"
         />
+
+        {/* The Fast Foreground Bar (Actual HP) */}
+        <motion.div
+          initial={{ width: "100%" }}
+          animate={{ width: `${hp}%` }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className={`absolute top-0.5 left-0.5 bottom-0.5 right-0.5 ${fighter.color} shadow-[inset_0_-4px_rgba(0,0,0,0.3)]`}
+        />
+
+        {/* The Glass Glare Overlay (For 3D pill effect) */}
+        <div className="absolute top-0.5 left-0.5 right-0.5 h-1/3 bg-white/20 z-10 pointer-events-none" />
       </div>
 
       {/* The Portrait Sprite */}
