@@ -459,54 +459,85 @@ export function CombatScreen({
       )}
 
       {isComplete && !showVerdictModal && (
-        <div className="absolute inset-0 bg-black/95 z-50 overflow-y-auto p-10">
-          <div className="sticky top-0 bg-black/95 pb-6 mb-6 border-b-2 border-arena-border flex flex-col md:flex-row justify-between items-center gap-4">
-            <h2 className="text-3xl md:text-4xl text-arena-text font-bold uppercase">
-              Debate Playback Review
-            </h2>
+        <div className="absolute inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-md overflow-hidden">
+          {/* Sticky Header */}
+          <div className="flex justify-between items-center px-10 py-6 border-b-4 border-gray-800 bg-black/90 z-20 shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+            <div>
+              <h2 className="text-3xl text-gray-400 uppercase tracking-widest font-black">
+                DEBATE TRANSCRIPT
+              </h2>
+              <p className="text-lg text-gray-500 mt-1">Topic: {topic}</p>
+            </div>
             <button
               type="button"
               onClick={onRestart}
-              className="px-8 py-4 border-4 border-arena-blue text-arena-blue hover:bg-arena-blue hover:text-white transition-colors text-2xl font-bold uppercase"
+              className="px-8 py-4 border-4 border-arena-blue text-arena-blue hover:bg-arena-blue hover:text-black transition-all text-xl font-bold tracking-widest"
             >
               START NEW DUEL
             </button>
           </div>
 
-          <div className="flex flex-col gap-8 mb-10 w-full max-w-4xl mx-auto font-sans">
-            {networkTurns.map((turn) => {
-              const isFighterA = turn.speaker_id === fighterAId;
-              const turnSpeakerName = isFighterA
-                ? fighterA.name
-                : fighterB.name;
-              const speakerColor = isFighterA
-                ? fighterA.color.replace("bg-", "text-")
-                : fighterB.color.replace("bg-", "text-");
-              const borderColor = isFighterA
-                ? fighterA.color.replace("bg-", "border-")
-                : fighterB.color.replace("bg-", "border-");
+          {/* Scrollable Timeline Area */}
+          <div className="flex-1 overflow-y-auto p-10 relative">
+            {/* The Center Spine */}
+            <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-1 bg-gray-800 opacity-50 z-0" />
 
-              return (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  key={turn.id}
-                  className={`flex flex-col ${isFighterA ? "items-start" : "items-end"}`}
-                >
-                  <div
-                    className={`text-sm font-mono tracking-widest uppercase mb-1 ${speakerColor}`}
+            <div className="flex flex-col gap-16 max-w-5xl mx-auto relative z-10 py-10">
+              {networkTurns.map((turn, index) => {
+                const isFighterA = turn.speaker_id === fighterAId;
+                const speakerName = isFighterA ? fighterA.name : fighterB.name;
+                const borderColor = isFighterA
+                  ? fighterA.color.replace("bg-", "border-")
+                  : fighterB.color.replace("bg-", "border-");
+                const textColor = isFighterA
+                  ? fighterA.color.replace("bg-", "text-")
+                  : fighterB.color.replace("bg-", "text-");
+
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    key={turn.id}
+                    className={`flex w-full relative ${isFighterA ? "justify-start" : "justify-end"}`}
                   >
-                    {turnSpeakerName} • [{turn.intent}]
-                  </div>
-                  <div
-                    className={`max-w-[80%] text-xl leading-relaxed text-gray-200 p-6 bg-gray-900/50 border-t-2 ${borderColor}`}
-                  >
-                    {turn.text}
-                  </div>
-                </motion.div>
-              );
-            })}
+                    {/* The Timeline Node (Dot on the center spine) */}
+                    <div
+                      className="absolute left-1/2 top-8 -translate-x-1/2 w-6 h-6 rounded-full bg-black border-4 z-20 shadow-[0_0_15px_rgba(0,0,0,1)]"
+                      style={{
+                        borderColor: isFighterA ? "#3c82ff" : "#ff3c3c",
+                      }}
+                    />
+
+                    {/* The Argument Card */}
+                    <div
+                      className={`w-[45%] flex flex-col ${isFighterA ? "items-end text-right" : "items-start text-left"}`}
+                    >
+                      {/* Metadata */}
+                      <div
+                        className={`text-sm font-mono tracking-widest uppercase mb-2 ${textColor} flex items-center gap-3`}
+                      >
+                        {isFighterA && (
+                          <span className="opacity-50">[{turn.intent}]</span>
+                        )}
+                        <span className="font-bold text-xl">{speakerName}</span>
+                        {!isFighterA && (
+                          <span className="opacity-50">[{turn.intent}]</span>
+                        )}
+                      </div>
+
+                      {/* Text Body */}
+                      <div
+                        className={`text-xl leading-relaxed text-gray-200 p-8 bg-gray-900/80 backdrop-blur-sm border-t-4 shadow-2xl ${borderColor}`}
+                      >
+                        {turn.text}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
