@@ -34,7 +34,7 @@ export function CombatScreen({
   } = useEngineStream(matchId);
   const [showVerdictModal, setShowVerdictModal] = useState(true);
   const [userVote, setUserVote] = useState<string | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
+  const isTyping = false;
   const [activeSpeakerVisual, setActiveSpeakerVisual] = useState<string | null>(
     null,
   );
@@ -65,7 +65,7 @@ export function CombatScreen({
       setActiveSpeakerVisual(currentSpeaker);
       setActiveIntentVisual(currentIntent);
     }
-  }, [currentSpeaker, currentIntent, isTyping]);
+  }, [currentSpeaker, currentIntent]);
 
   useEffect(() => {
     if (status === "completed") {
@@ -78,11 +78,6 @@ export function CombatScreen({
   const isBSpeaking = status !== "error" && activeSpeakerVisual === fighterB.id;
   const isJudge = status !== "error" && activeSpeakerVisual === "judge";
 
-  let speakerName = null;
-  if (isASpeaking) speakerName = fighterA.name;
-  if (isBSpeaking) speakerName = fighterB.name;
-  if (isJudge) speakerName = "THE JUDGE";
-
   // Calculate HP for game feel (Loser drops to 0 at the end)
   const hasBufferedTurnAhead = visualTurnIndex < networkTurns.length - 1;
   const isComplete =
@@ -93,8 +88,6 @@ export function CombatScreen({
   const modalOpen = isComplete && showVerdictModal;
   const fighterABorderClass = fighterA.color.replace("bg-", "border-");
   const fighterBBorderClass = fighterB.color.replace("bg-", "border-");
-  const fighterALeftBorderClass = fighterA.color.replace("bg-", "border-l-");
-  const fighterBRightBorderClass = fighterB.color.replace("bg-", "border-r-");
   const hpA =
     isComplete && userVote
       ? verdict.winner_id === fighterA.id
@@ -117,6 +110,7 @@ export function CombatScreen({
     (isASpeaking || isBSpeaking) &&
     (activeIntentVisual === "counter" || activeIntentVisual === "rebuttal");
   const isKO = isComplete && userVote !== null;
+  const fighterAId = fighterA.id;
 
   return (
     <motion.div
@@ -139,7 +133,7 @@ export function CombatScreen({
             ? { duration: 0.4 }
             : { duration: 0.5 }
       }
-      className="max-w-6xl w-full mx-auto p-4 flex flex-col justify-between h-[85vh] relative z-10"
+      className="max-w-6xl w-full mx-auto p-4 flex flex-col h-[85vh] relative z-10"
     >
       {/* 3D Synthwave Grid Background (Animated Camera Pan) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 opacity-20">
@@ -187,10 +181,10 @@ export function CombatScreen({
       <motion.div
         animate={{
           scale: isASpeaking || isBSpeaking ? 1.02 : 1,
-          x: isASpeaking ? 10 : isBSpeaking ? -10 : 0,
+          x: 0,
         }}
         transition={{ type: "spring", stiffness: 40, damping: 25 }}
-        className={`flex justify-between items-end px-10 grow mb-10 relative transition-all duration-300 ${
+        className={`flex items-start justify-between w-full h-full relative transition-all duration-300 ${
           modalOpen ? "opacity-60 blur-[1px]" : "opacity-100"
         }`}
       >
@@ -199,37 +193,89 @@ export function CombatScreen({
           isActive={isASpeaking}
           facing="right"
           hp={hpA}
-          currentIntent={activeIntentVisual}
+          currentIntent={currentIntent}
           isIntroPlaying={isIntroPlaying}
           isBeingAttacked={isBSpeaking && isAttack}
         />
 
+        {/* Dialogue for the Left */}
+        {!isIntroPlaying && !isComplete && isASpeaking && (
+          <div className="absolute left-[8%] top-4 z-70 w-[62%]">
+            <DialogueBox
+              speakerName={fighterA.name}
+              rawText={rawText}
+              isJudge={isJudge}
+              onTypingComplete={() => {
+                if (visualTurnIndex < networkTurns.length - 1) {
+                  if (advanceTimerRef.current) {
+                    clearTimeout(advanceTimerRef.current);
+                  }
+
+                  advanceTimerRef.current = setTimeout(() => {
+                    advanceVisualTurn();
+                    advanceTimerRef.current = null;
+                  }, 1500);
+                }
+              }}
+              speakerSide="left"
+            />
+          </div>
+        )}
+
+        {/* Dialogue for the Right */}
+        {!isIntroPlaying && !isComplete && isBSpeaking && (
+          <div className="absolute right-[8%] top-4 z-70 w-[62%]">
+            <DialogueBox
+              speakerName={fighterB.name}
+              rawText={rawText}
+              isJudge={isJudge}
+              onTypingComplete={() => {
+                if (visualTurnIndex < networkTurns.length - 1) {
+                  if (advanceTimerRef.current) {
+                    clearTimeout(advanceTimerRef.current);
+                  }
+
+                  advanceTimerRef.current = setTimeout(() => {
+                    advanceVisualTurn();
+                    advanceTimerRef.current = null;
+                  }, 1500);
+                }
+              }}
+              speakerSide="right"
+            />
+          </div>
+        )}
+
+        {/* Dialogue for the Judge */}
+        {!isIntroPlaying && !isComplete && isJudge && (
+          <div className="absolute left-1/2 top-4 z-70 w-[70%] -translate-x-1/2">
+            <DialogueBox
+              speakerName="THE JUDGE"
+              rawText={rawText}
+              isJudge={isJudge}
+              onTypingComplete={() => {
+                if (visualTurnIndex < networkTurns.length - 1) {
+                  if (advanceTimerRef.current) {
+                    clearTimeout(advanceTimerRef.current);
+                  }
+
+                  advanceTimerRef.current = setTimeout(() => {
+                    advanceVisualTurn();
+                    advanceTimerRef.current = null;
+                  }, 1500);
+                }
+              }}
+              speakerSide="right"
+            />
+          </div>
+        )}
+
         {/* VS or Judge Graphic */}
         <div className="absolute left-1/2 bottom-20 -translate-x-1/2 flex flex-col items-center z-50 pointer-events-none">
-          {status === "judging" && (
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ repeat: Infinity }}
-              className="text-4xl text-yellow-500 font-bold mb-4 drop-shadow-[0_0_10px_#eab308]"
-            >
-              EVALUATING...
-            </motion.div>
-          )}
-
-          {/* The Explosive VS Slam (Only during intro) */}
-          {isIntroPlaying && (
-            <motion.h1
-              initial={{ scale: 10, opacity: 0 }}
-              animate={{ scale: 1, opacity: [0, 1, 1, 0] }}
-              transition={{
-                duration: 2.5,
-                times: [0, 0.2, 0.8, 1],
-                ease: ["easeIn", "easeOut", "easeIn", "easeOut"],
-              }}
-              className="text-9xl text-arena-red italic font-bold drop-shadow-[0_0_30px_rgba(255,60,60,1)]"
-            >
+          {status === "debating" && (
+            <h1 className="text-6xl text-arena-red italic font-bold drop-shadow-[0_0_30px_rgba(255,60,60,1)] absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
               VS
-            </motion.h1>
+            </h1>
           )}
         </div>
 
@@ -238,43 +284,11 @@ export function CombatScreen({
           isActive={isBSpeaking}
           facing="left"
           hp={hpB}
-          currentIntent={activeIntentVisual}
+          currentIntent={currentIntent}
           isIntroPlaying={isIntroPlaying}
           isBeingAttacked={isASpeaking && isAttack}
         />
       </motion.div>
-
-      {/* The Dialogue & Verdict Area */}
-      <AnimatePresence>
-        {!isIntroPlaying && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full relative z-20"
-          >
-            {!isComplete ? (
-              <DialogueBox
-                speakerName={speakerName}
-                rawText={rawText}
-                isJudge={isJudge}
-                onTypingChange={setIsTyping}
-                onTypingComplete={() => {
-                  if (visualTurnIndex < networkTurns.length - 1) {
-                    if (advanceTimerRef.current) {
-                      clearTimeout(advanceTimerRef.current);
-                    }
-
-                    advanceTimerRef.current = setTimeout(() => {
-                      advanceVisualTurn();
-                      advanceTimerRef.current = null;
-                    }, 1500);
-                  }
-                }}
-              />
-            ) : null}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {isComplete && showVerdictModal && verdict && (
         <div
@@ -400,31 +414,38 @@ export function CombatScreen({
             </button>
           </div>
 
-          <div className="space-y-6 pb-6">
+          <div className="flex flex-col gap-8 mb-10 w-full max-w-4xl mx-auto font-sans">
             {networkTurns.map((turn) => {
-              const isSpeakerA = turn.speaker_id === fighterA.id;
-              const speakerLabel = isSpeakerA
+              const isFighterA = turn.speaker_id === fighterAId;
+              const turnSpeakerName = isFighterA
                 ? fighterA.name
-                : turn.speaker_id === fighterB.id
-                  ? fighterB.name
-                  : turn.speaker_id;
+                : fighterB.name;
+              const speakerColor = isFighterA
+                ? fighterA.color.replace("bg-", "text-")
+                : fighterB.color.replace("bg-", "text-");
+              const borderColor = isFighterA
+                ? fighterA.color.replace("bg-", "border-")
+                : fighterB.color.replace("bg-", "border-");
 
               return (
-                <div
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
                   key={turn.id}
-                  className={`max-w-4xl ${
-                    isSpeakerA
-                      ? `mr-auto text-left border-l-4 pl-4 ${fighterALeftBorderClass}`
-                      : `ml-auto text-right border-r-4 pr-4 ${fighterBRightBorderClass}`
-                  }`}
+                  className={`flex flex-col ${isFighterA ? "items-start" : "items-end"}`}
                 >
-                  <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">
-                    {speakerLabel}
-                  </p>
-                  <p className="text-xl leading-relaxed whitespace-pre-wrap bg-black/70 p-4">
+                  <div
+                    className={`text-sm font-mono tracking-widest uppercase mb-1 ${speakerColor}`}
+                  >
+                    {turnSpeakerName} • [{turn.intent}]
+                  </div>
+                  <div
+                    className={`max-w-[80%] text-xl leading-relaxed text-gray-200 p-6 bg-gray-900/50 border-t-2 ${borderColor}`}
+                  >
                     {turn.text}
-                  </p>
-                </div>
+                  </div>
+                </motion.div>
               );
             })}
           </div>
