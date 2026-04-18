@@ -33,6 +33,7 @@ export function CombatScreen({
     errorMessage,
   } = useEngineStream(matchId);
   const [showVerdictModal, setShowVerdictModal] = useState(true);
+  const [showVotePrompt, setShowVotePrompt] = useState(false);
   const [userVote, setUserVote] = useState<string | null>(null);
   const isTyping = false;
   const [activeSpeakerVisual, setActiveSpeakerVisual] = useState<string | null>(
@@ -70,7 +71,10 @@ export function CombatScreen({
   useEffect(() => {
     if (status === "completed") {
       setShowVerdictModal(true);
+      setShowVotePrompt(false);
       setUserVote(null);
+    } else {
+      setShowVotePrompt(false);
     }
   }, [status]);
 
@@ -112,6 +116,13 @@ export function CombatScreen({
   const isKO = isComplete && userVote !== null;
   const fighterAId = fighterA.id;
 
+  useEffect(() => {
+    if (isComplete && !userVote) {
+      const timer = setTimeout(() => setShowVotePrompt(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isComplete, userVote]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -136,8 +147,25 @@ export function CombatScreen({
       className="max-w-6xl w-full mx-auto p-4 flex flex-col h-[85vh] relative z-10"
     >
       {/* 3D Synthwave Grid Background (Animated Camera Pan) */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 opacity-20">
+      <motion.div
+        animate={{ opacity: isComplete || status === "judging" ? 0.05 : 0.2 }}
+        transition={{ duration: 1.5 }}
+        className="absolute inset-0 overflow-hidden pointer-events-none -z-10"
+      >
         <div className="absolute bottom-0 left-0 right-0 h-[40vh] bg-linear-to-t from-arena-blue/30 to-transparent" />
+
+        {/* The Judge's Spotlight (Only visible during climax) */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isComplete || status === "judging" ? 1 : 0 }}
+          transition={{ duration: 1.5, ease: "easeInOut" }}
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 30%, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.9) 60%, rgba(0,0,0,1) 100%)",
+          }}
+        />
+
         <motion.div
           className="w-[200%] h-[50vh] absolute bottom-0 -left-[50%]"
           animate={{
@@ -152,7 +180,7 @@ export function CombatScreen({
             transformOrigin: "bottom center",
           }}
         />
-      </div>
+      </motion.div>
 
       {/* Header Topic & Turn Indicator */}
       <AnimatePresence>
@@ -273,7 +301,38 @@ export function CombatScreen({
         )}
 
         {/* VS or Judge Graphic */}
-        <div className="absolute left-1/2 bottom-20 -translate-x-1/2 flex flex-col items-center z-50 pointer-events-none">
+        <div className="absolute inset-0 z-50 pointer-events-none">
+          {/* The Judge's Descent */}
+          <AnimatePresence>
+            {status === "judging" && (
+              <motion.div
+                initial={{ y: -500, opacity: 0, scale: 2 }}
+                animate={{ y: -50, opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ type: "spring", damping: 12, stiffness: 50 }}
+                className="absolute left-1/2 bottom-32 -translate-x-1/2 flex flex-col items-center z-40 pointer-events-none"
+              >
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 3,
+                    ease: "easeInOut",
+                  }}
+                  className="text-9xl drop-shadow-[0_0_30px_rgba(255,255,255,0.8)] mb-6"
+                >
+                  ⚖️
+                </motion.div>
+                <h2 className="text-3xl text-white font-black tracking-[0.5em] uppercase drop-shadow-lg">
+                  SILENCE
+                </h2>
+                <p className="text-xl text-yellow-500 tracking-widest mt-2 animate-pulse">
+                  THE JUDGE IS DELIBERATING
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {status === "debating" && (
             <h1 className="text-6xl text-arena-red italic font-bold drop-shadow-[0_0_30px_rgba(255,60,60,1)] absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
               VS
@@ -301,7 +360,7 @@ export function CombatScreen({
           className="absolute inset-0 z-50 flex items-center justify-center p-8 bg-black/80 backdrop-blur-md"
         >
           <div className="w-full max-w-5xl bg-gray-900 border-4 border-yellow-500 p-10 shadow-[0_0_50px_rgba(234,179,8,0.3)] overflow-y-auto max-h-[90vh]">
-            {!userVote ? (
+            {!userVote && showVotePrompt ? (
               <div className="flex flex-col items-center py-2 md:py-6">
                 <h2 className="text-3xl md:text-4xl text-arena-text mb-2 tracking-widest uppercase text-center">
                   THE DEBATE HAS CONCLUDED
@@ -335,7 +394,7 @@ export function CombatScreen({
                   </motion.button>
                 </div>
               </div>
-            ) : (
+            ) : userVote ? (
               <>
                 <div className="flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-center border-b-2 border-yellow-500/30 pb-4 mb-6">
                   <h2 className="text-3xl md:text-4xl text-yellow-500 text-center grow uppercase">
@@ -394,7 +453,7 @@ export function CombatScreen({
                   </button>
                 </div>
               </>
-            )}
+            ) : null}
           </div>
         </motion.div>
       )}
