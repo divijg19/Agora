@@ -196,6 +196,8 @@ export function CombatScreen({
           currentIntent={currentIntent}
           isIntroPlaying={isIntroPlaying}
           isBeingAttacked={isBSpeaking && isAttack}
+          verdict={verdict}
+          userVote={userVote}
         />
 
         {/* Dialogue for the Left */}
@@ -287,20 +289,18 @@ export function CombatScreen({
           currentIntent={currentIntent}
           isIntroPlaying={isIntroPlaying}
           isBeingAttacked={isASpeaking && isAttack}
+          verdict={verdict}
+          userVote={userVote}
         />
       </motion.div>
 
       {isComplete && showVerdictModal && verdict && (
-        <div
-          className={`absolute inset-0 z-40 flex items-center justify-center p-4 ${
-            !userVote ? "bg-black/90 backdrop-blur-sm" : "bg-black/80"
-          }`}
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="absolute inset-0 z-50 flex items-center justify-center p-8 bg-black/80 backdrop-blur-md"
         >
-          <motion.div
-            initial={{ y: 40, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="w-full max-w-5xl border-4 border-yellow-500 bg-black p-6 md:p-8 shadow-[0_0_30px_rgba(234,179,8,0.25)] max-h-[70vh] overflow-y-auto"
-          >
+          <div className="w-full max-w-5xl bg-gray-900 border-4 border-yellow-500 p-10 shadow-[0_0_50px_rgba(234,179,8,0.3)] overflow-y-auto max-h-[90vh]">
             {!userVote ? (
               <div className="flex flex-col items-center py-2 md:py-6">
                 <h2 className="text-3xl md:text-4xl text-arena-text mb-2 tracking-widest uppercase text-center">
@@ -395,8 +395,8 @@ export function CombatScreen({
                 </div>
               </>
             )}
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       )}
 
       {isComplete && !showVerdictModal && (

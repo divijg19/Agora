@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import type { MatchVerdict } from "../hooks/useEngineStream";
 import type { FighterDef } from "../types/fighter";
 
 interface FighterSpriteProps {
@@ -10,6 +11,8 @@ interface FighterSpriteProps {
   currentIntent?: string | null;
   isIntroPlaying: boolean;
   isBeingAttacked?: boolean;
+  verdict?: MatchVerdict | null;
+  userVote?: string | null;
 }
 
 export function FighterSprite({
@@ -20,6 +23,8 @@ export function FighterSprite({
   currentIntent,
   isIntroPlaying,
   isBeingAttacked = false,
+  verdict,
+  userVote,
 }: FighterSpriteProps) {
   const [isStunned, setIsStunned] = useState(false);
   const [showCallout, setShowCallout] = useState(false);
@@ -49,11 +54,20 @@ export function FighterSprite({
 
   const isAttack =
     isActive && (currentIntent === "counter" || currentIntent === "rebuttal");
+  const isDefeated = verdict && userVote && verdict.winner_id !== fighter.id;
 
   let spriteAnimation = {};
   let spriteTransition = {};
 
-  if (isActive) {
+  if (isDefeated) {
+    spriteAnimation = {
+      y: 200,
+      rotate: facing === "right" ? -90 : 90,
+      opacity: 0,
+      filter: "grayscale(1)",
+    };
+    spriteTransition = { duration: 1.5, ease: "easeIn" };
+  } else if (isActive) {
     if (isAttack) {
       spriteAnimation = {
         x: facing === "right" ? [0, 40, 0] : [0, -40, 0],
