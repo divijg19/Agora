@@ -115,6 +115,8 @@ export function CombatScreen({
     (activeIntentVisual === "counter" || activeIntentVisual === "rebuttal");
   const isKO = isComplete && userVote !== null;
   const fighterAId = fighterA.id;
+  const fighterBId = fighterB.id;
+  const ROSTER = [fighterA, fighterB];
 
   useEffect(() => {
     if (isComplete && !userVote) {
@@ -537,6 +539,65 @@ export function CombatScreen({
                   </motion.div>
                 );
               })}
+
+              {/* The Final Verdict Node */}
+              {verdict && (
+                <motion.div
+                  initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.8, delay: 0.3 }}
+                  className="flex flex-col items-center w-full relative z-10 mt-10"
+                >
+                  {/* The Judge's Node (Golden Dot) */}
+                  <div className="absolute left-1/2 -top-8 -translate-x-1/2 w-8 h-8 rounded-full bg-black border-4 z-20 shadow-[0_0_20px_rgba(234,179,8,1)] flex items-center justify-center text-xs border-yellow-500">
+                    ⚖️
+                  </div>
+
+                  {/* The Verdict Card */}
+                  <div className="w-full max-w-4xl flex flex-col items-center bg-gray-900 border-4 border-yellow-500 p-10 shadow-[0_0_50px_rgba(234,179,8,0.2)]">
+                    <h3 className="text-xl font-mono tracking-widest uppercase text-yellow-500 mb-6 flex items-center gap-4">
+                      <span className="w-12 h-px bg-yellow-500/50"></span>
+                      FINAL JUDGMENT
+                      <span className="w-12 h-px bg-yellow-500/50"></span>
+                    </h3>
+
+                    <h2 className="text-4xl font-black text-white text-center mb-8 drop-shadow-lg">
+                      WINNER:{" "}
+                      <span className="text-yellow-500">
+                        {ROSTER.find((f) => f.id === verdict.winner_id)?.name}
+                      </span>
+                    </h2>
+
+                    <p className="text-2xl text-center leading-relaxed text-gray-200 italic mb-10 border-b-2 border-yellow-500/20 pb-10">
+                      "{verdict.punchline_reasoning}"
+                    </p>
+
+                    <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+                      <div
+                        className={`p-6 border-l-4 ${verdict.winner_id === fighterAId ? "border-arena-green" : "border-arena-red"} bg-black/50`}
+                      >
+                        <h4 className="text-sm font-mono text-gray-400 uppercase mb-3">
+                          CRITIQUE: {fighterA.name}
+                        </h4>
+                        <p className="text-lg text-gray-300 leading-relaxed">
+                          {verdict.fighter_a_critique}
+                        </p>
+                      </div>
+                      <div
+                        className={`p-6 border-l-4 ${verdict.winner_id === fighterBId ? "border-arena-green" : "border-arena-red"} bg-black/50`}
+                      >
+                        <h4 className="text-sm font-mono text-gray-400 uppercase mb-3">
+                          CRITIQUE: {fighterB.name}
+                        </h4>
+                        <p className="text-lg text-gray-300 leading-relaxed">
+                          {verdict.fighter_b_critique}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </div>
         </div>
