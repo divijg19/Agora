@@ -3,5 +3,10 @@ export interface FighterDef {
   name: string;
   tagline: string;
   color: string;
-  avatar: string;
+  animations: {
+    idle: string;
+    attack: string;
+    stun: string;
+    special: string;
+  };
 }

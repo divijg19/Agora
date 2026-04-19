@@ -10,7 +10,17 @@ class Persona(BaseModel):
     strategy: str
     weakness: str
     color: str
-    avatar: str
+    animations: Dict[str, str]
+
+
+def get_placeholders(name: str) -> Dict[str, str]:
+    base = "https://placehold.co/300x400/1a1a1a/FFF?text="
+    return {
+        "idle": f"{base}{name}\\nIDLE",
+        "attack": f"{base}{name}\\nATTACK",
+        "stun": f"{base}{name}\\nSTUNNED",
+        "special": f"{base}{name}\\nSPECIAL",
+    }
 
 
 ROSTER: Dict[str, Persona] = {
@@ -22,7 +32,7 @@ ROSTER: Dict[str, Persona] = {
         strategy="Reduces every moral or philosophical argument to a cost-benefit analysis and resource allocation problem.",
         weakness="Lacks empathy. Highly vulnerable to human-centric, emotional, or ethical rebuttals.",
         color="bg-blue-600",
-        avatar="📈",
+        animations=get_placeholders("ECONOMIST"),
     ),
     "philosopher": Persona(
         id="philosopher",
@@ -32,7 +42,7 @@ ROSTER: Dict[str, Persona] = {
         strategy="Elevates the debate to first principles. Questions the fundamental premises of the opponent's argument.",
         weakness="Can be overly abstract and evasive. Vulnerable to demands for concrete data or practical solutions.",
         color="bg-purple-600",
-        avatar="👁️",
+        animations=get_placeholders("PHILOSOPHER"),
     ),
     "technologist": Persona(
         id="technologist",
@@ -42,7 +52,7 @@ ROSTER: Dict[str, Persona] = {
         strategy="Frames all problems as engineering challenges waiting to be solved by innovation. Appeals to the future.",
         weakness="Prone to techno-solutionism. Often ignores historical precedent and immediate human displacement.",
         color="bg-green-600",
-        avatar="⚡",
+        animations=get_placeholders("TECHNOLOGIST"),
     ),
     "doomer": Persona(
         id="doomer",
@@ -52,7 +62,7 @@ ROSTER: Dict[str, Persona] = {
         strategy="Points out the fatal flaws, systemic risks, and inevitable unintended consequences of the opponent's ideas.",
         weakness="Overly pessimistic. Fails to provide constructive alternatives.",
         color="bg-red-600",
-        avatar="💀",
+        animations=get_placeholders("DOOMER"),
     ),
 }
 

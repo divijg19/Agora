@@ -56,6 +56,10 @@ export function FighterSprite({
     isActive && (currentIntent === "counter" || currentIntent === "rebuttal");
   const isDefeated = verdict && userVote && verdict.winner_id !== fighter.id;
 
+  let currentState: "idle" | "attack" | "stun" | "special" = "idle";
+  if (isStunned) currentState = "stun";
+  else if (isAttack) currentState = "attack";
+
   let spriteAnimation = {};
   let spriteTransition = {};
 
@@ -146,21 +150,17 @@ export function FighterSprite({
       <motion.div
         animate={spriteAnimation}
         transition={spriteTransition}
-        className={`w-32 h-40 border-4 bg-linear-to-b from-gray-800 to-black flex items-center justify-center relative overflow-hidden ${borderColorClass}`}
+        className="w-40 h-56 flex items-center justify-center relative overflow-hidden drop-shadow-2xl"
       >
-        {/* Retro scanline overlay just for the portrait */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0)_50%,rgba(0,0,0,0.25)_50%)] bg-size-[100%_4px] pointer-events-none z-10" />
-
-        {/* The Emoji Avatar */}
-        <div
-          className="text-7xl absolute z-0"
+        <img
+          src={fighter.animations[currentState]}
+          alt={`${fighter.name} ${currentState}`}
+          className="w-full h-full object-cover pixelated"
           style={{
             transform: facing === "left" ? "scaleX(-1)" : "none",
-            textShadow: "0 4px 0 rgba(0,0,0,0.5)", // 8-bit drop shadow effect
+            imageRendering: "pixelated",
           }}
-        >
-          {fighter.avatar}
-        </div>
+        />
       </motion.div>
 
       {/* Floating Arcade Callout */}
