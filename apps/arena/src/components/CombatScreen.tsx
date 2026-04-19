@@ -34,6 +34,9 @@ export function CombatScreen({
   } = useEngineStream(matchId);
   const [showVerdictModal, setShowVerdictModal] = useState(true);
   const [showVotePrompt, setShowVotePrompt] = useState(false);
+  const [activeCamera, setActiveCamera] = useState<"profile" | "topDown">(
+    "profile",
+  );
   const [userVote, setUserVote] = useState<string | null>(null);
   const isTyping = false;
   const [activeSpeakerVisual, setActiveSpeakerVisual] = useState<string | null>(
@@ -81,6 +84,31 @@ export function CombatScreen({
   const isASpeaking = status !== "error" && activeSpeakerVisual === fighterA.id;
   const isBSpeaking = status !== "error" && activeSpeakerVisual === fighterB.id;
   const isJudge = status !== "error" && activeSpeakerVisual === "judge";
+
+  let speakerName: string | null = null;
+  if (isASpeaking) speakerName = fighterA.name;
+  if (isBSpeaking) speakerName = fighterB.name;
+  if (isJudge) speakerName = "THE JUDGE";
+
+  // Cinematic Director Logic
+  useEffect(() => {
+    if (status !== "debating") {
+      setActiveCamera("profile");
+      return;
+    }
+
+    // 30% chance to cut to Top-Down on Rebuttals or Closings
+    if (currentIntent === "rebuttal" || currentIntent === "closing") {
+      const roll = Math.random();
+      if (roll > 0.7) {
+        setActiveCamera("topDown");
+        return;
+      }
+    }
+
+    // Otherwise, stay in 2D profile
+    setActiveCamera("profile");
+  }, [status, currentIntent]);
 
   // Calculate HP for game feel (Loser drops to 0 at the end)
   const hasBufferedTurnAhead = visualTurnIndex < networkTurns.length - 1;
@@ -148,59 +176,94 @@ export function CombatScreen({
       }
       className="max-w-6xl w-full mx-auto p-4 flex flex-col h-[85vh] relative z-10"
     >
-      {/* 2.5D Parallax Colosseum Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 bg-gray-950">
-        {/* Layer 1: Deep Background (Sky/Architecture) - Slowest Pan */}
-        <motion.div
-          animate={{ x: isASpeaking ? "2%" : isBSpeaking ? "-2%" : "0%" }}
-          transition={{ type: "spring", stiffness: 20, damping: 30 }}
-          className="absolute inset-[-10%] w-[120%] h-full bg-gray-900 opacity-50"
-          style={{
-            backgroundImage:
-              'url("https://placehold.co/1920x1080/111/333?text=DEEP+BACKGROUND")',
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        />
+      {/* --- CAMERA SYSTEM --- */}
+      <AnimatePresence mode="wait">
+        {activeCamera === "profile" ? (
+          <motion.div
+            key="camera-profile"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 overflow-hidden pointer-events-none -z-10 bg-gray-950"
+          >
+            {/* Layer 1: Deep Background */}
+            <motion.div
+              animate={{ x: isASpeaking ? "2%" : isBSpeaking ? "-2%" : "0%" }}
+              transition={{ type: "spring", stiffness: 20, damping: 30 }}
+              className="absolute inset-[-10%] w-[120%] h-full bg-gray-900 opacity-50"
+              style={{
+                backgroundImage:
+                  'url("https://placehold.co/1920x1080/111/333?text=DEEP+BACKGROUND")',
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            />
 
-        {/* Layer 2: The Crowd - Medium Pan + CSS Bounce */}
-        <motion.div
-          animate={{ x: isASpeaking ? "5%" : isBSpeaking ? "-5%" : "0%" }}
-          transition={{ type: "spring", stiffness: 30, damping: 25 }}
-          className="absolute inset-[-10%] w-[120%] h-full opacity-60"
-        >
-          <div
-            className="w-full h-full animate-[bounce_2s_infinite]"
+            {/* Layer 2: The Crowd */}
+            <motion.div
+              animate={{ x: isASpeaking ? "5%" : isBSpeaking ? "-5%" : "0%" }}
+              transition={{ type: "spring", stiffness: 30, damping: 25 }}
+              className="absolute inset-[-10%] w-[120%] h-full opacity-60"
+            >
+              <div
+                className="w-full h-full animate-[bounce_2s_infinite]"
+                style={{
+                  backgroundImage:
+                    'url("https://placehold.co/1920x1080/222/444?text=THE+CROWD")',
+                  backgroundSize: "cover",
+                  backgroundPosition: "bottom",
+                }}
+              />
+            </motion.div>
+
+            {/* Layer 3: Stage Floor */}
+            <motion.div
+              animate={{ x: isASpeaking ? "10%" : isBSpeaking ? "-10%" : "0%" }}
+              transition={{ type: "spring", stiffness: 40, damping: 20 }}
+              className="absolute bottom-0 left-[-20%] w-[140%] h-[30vh] border-t-4 border-gray-800"
+              style={{
+                backgroundImage:
+                  'url("https://placehold.co/1920x400/000/222?text=STAGE+FLOOR")',
+                backgroundSize: "cover",
+              }}
+            />
+
+            {/* Aggressive Pulse Overlay */}
+            <motion.div
+              animate={{ opacity: isAttack ? [0, 0.8, 0] : 0 }}
+              transition={
+                isAttack ? { duration: 0.3, ease: "easeOut" } : { duration: 0 }
+              }
+              className="absolute inset-0 bg-arena-red/30 mix-blend-overlay"
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="camera-topdown"
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              x: ["0%", "-5%", "0%"],
+              y: ["0%", "5%", "0%"],
+            }}
+            exit={{ opacity: 0 }}
+            transition={{
+              opacity: { duration: 0.5 },
+              scale: { duration: 0.5 },
+              x: { repeat: Infinity, duration: 20, ease: "linear" },
+              y: { repeat: Infinity, duration: 25, ease: "linear" },
+            }}
+            className="absolute inset-[-10%] w-[120%] h-[120%] -z-10 pointer-events-none"
             style={{
               backgroundImage:
-                'url("https://placehold.co/1920x1080/222/444?text=THE+CROWD")',
+                'url("https://placehold.co/1920x1080/000/FFF?text=TOP+DOWN+COLOSSEUM")',
               backgroundSize: "cover",
-              backgroundPosition: "bottom",
+              backgroundPosition: "center",
             }}
           />
-        </motion.div>
-
-        {/* Layer 3: Stage Floor - Fastest Pan for Depth */}
-        <motion.div
-          animate={{ x: isASpeaking ? "10%" : isBSpeaking ? "-10%" : "0%" }}
-          transition={{ type: "spring", stiffness: 40, damping: 20 }}
-          className="absolute bottom-0 left-[-20%] w-[140%] h-[30vh] border-t-4 border-gray-800"
-          style={{
-            backgroundImage:
-              'url("https://placehold.co/1920x400/000/222?text=STAGE+FLOOR")',
-            backgroundSize: "cover",
-          }}
-        />
-
-        {/* Aggressive Pulse Overlay (Keep from previous) */}
-        <motion.div
-          animate={{ opacity: isAttack ? [0, 0.8, 0] : 0 }}
-          transition={
-            isAttack ? { duration: 0.3, ease: "easeOut" } : { duration: 0 }
-          }
-          className="absolute inset-0 bg-arena-red/30 mix-blend-overlay"
-        />
-      </div>
+        )}
+      </AnimatePresence>
 
       {/* Header Topic & Turn Indicator */}
       <AnimatePresence>
@@ -225,153 +288,181 @@ export function CombatScreen({
         )}
       </AnimatePresence>
 
-      {/* The Stage */}
-      <motion.div
-        animate={{
-          scale: isASpeaking || isBSpeaking ? 1.02 : 1,
-          x: 0,
-        }}
-        transition={{ type: "spring", stiffness: 40, damping: 25 }}
-        className={`flex items-start justify-between w-full h-full relative transition-all duration-300 ${
-          modalOpen ? "opacity-60 blur-[1px]" : "opacity-100"
-        }`}
-      >
-        <FighterSprite
-          fighter={fighterA}
-          isActive={isASpeaking}
-          facing="right"
-          hp={hpA}
-          currentIntent={currentIntent}
-          isIntroPlaying={isIntroPlaying}
-          isBeingAttacked={isBSpeaking && isAttack}
-          verdict={verdict}
-          userVote={userVote}
-        />
-
-        {/* Dialogue for the Left */}
-        {!isIntroPlaying && !isComplete && isASpeaking && (
-          <div className="absolute left-[8%] top-4 z-70 w-[62%]">
-            <DialogueBox
-              speakerName={fighterA.name}
-              rawText={rawText}
-              isJudge={isJudge}
-              onTypingComplete={() => {
-                if (visualTurnIndex < networkTurns.length - 1) {
-                  if (advanceTimerRef.current) {
-                    clearTimeout(advanceTimerRef.current);
-                  }
-
-                  advanceTimerRef.current = setTimeout(() => {
-                    advanceVisualTurn();
-                    advanceTimerRef.current = null;
-                  }, 1500);
-                }
-              }}
-              speakerSide="left"
+      {/* 2. MOVED DOWN: The Stage (Fighters) */}
+      <AnimatePresence>
+        {activeCamera === "profile" && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className={`flex items-start justify-between w-full h-full relative transition-all duration-300 ${
+              modalOpen ? "opacity-60 blur-[1px]" : "opacity-100"
+            }`}
+          >
+            <FighterSprite
+              fighter={fighterA}
+              isActive={isASpeaking}
+              facing="right"
+              hp={hpA}
+              currentIntent={currentIntent}
+              isIntroPlaying={isIntroPlaying}
+              isBeingAttacked={isBSpeaking && isAttack}
+              verdict={verdict}
+              userVote={userVote}
             />
-          </div>
-        )}
 
-        {/* Dialogue for the Right */}
-        {!isIntroPlaying && !isComplete && isBSpeaking && (
-          <div className="absolute right-[8%] top-4 z-70 w-[62%]">
-            <DialogueBox
-              speakerName={fighterB.name}
-              rawText={rawText}
-              isJudge={isJudge}
-              onTypingComplete={() => {
-                if (visualTurnIndex < networkTurns.length - 1) {
-                  if (advanceTimerRef.current) {
-                    clearTimeout(advanceTimerRef.current);
-                  }
+            {/* Dialogue for the Left */}
+            {!isIntroPlaying && !isComplete && isASpeaking && (
+              <div className="absolute left-[8%] top-4 z-70 w-[62%]">
+                <DialogueBox
+                  speakerName={fighterA.name}
+                  rawText={rawText}
+                  isJudge={isJudge}
+                  onTypingComplete={() => {
+                    if (visualTurnIndex < networkTurns.length - 1) {
+                      if (advanceTimerRef.current) {
+                        clearTimeout(advanceTimerRef.current);
+                      }
 
-                  advanceTimerRef.current = setTimeout(() => {
-                    advanceVisualTurn();
-                    advanceTimerRef.current = null;
-                  }, 1500);
-                }
-              }}
-              speakerSide="right"
-            />
-          </div>
-        )}
-
-        {/* Dialogue for the Judge */}
-        {!isIntroPlaying && !isComplete && isJudge && (
-          <div className="absolute left-1/2 top-4 z-70 w-[70%] -translate-x-1/2">
-            <DialogueBox
-              speakerName="THE JUDGE"
-              rawText={rawText}
-              isJudge={isJudge}
-              onTypingComplete={() => {
-                if (visualTurnIndex < networkTurns.length - 1) {
-                  if (advanceTimerRef.current) {
-                    clearTimeout(advanceTimerRef.current);
-                  }
-
-                  advanceTimerRef.current = setTimeout(() => {
-                    advanceVisualTurn();
-                    advanceTimerRef.current = null;
-                  }, 1500);
-                }
-              }}
-              speakerSide="right"
-            />
-          </div>
-        )}
-
-        {/* VS or Judge Graphic */}
-        <div className="absolute inset-0 z-50 pointer-events-none">
-          {/* The Judge's Descent */}
-          <AnimatePresence>
-            {status === "judging" && (
-              <motion.div
-                initial={{ y: -500, opacity: 0, scale: 2 }}
-                animate={{ y: -50, opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ type: "spring", damping: 12, stiffness: 50 }}
-                className="absolute left-1/2 bottom-32 -translate-x-1/2 flex flex-col items-center z-40 pointer-events-none"
-              >
-                <motion.div
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 3,
-                    ease: "easeInOut",
+                      advanceTimerRef.current = setTimeout(() => {
+                        advanceVisualTurn();
+                        advanceTimerRef.current = null;
+                      }, 1500);
+                    }
                   }}
-                  className="text-9xl drop-shadow-[0_0_30px_rgba(255,255,255,0.8)] mb-6"
-                >
-                  ⚖️
-                </motion.div>
-                <h2 className="text-3xl text-white font-black tracking-[0.5em] uppercase drop-shadow-lg">
-                  SILENCE
-                </h2>
-                <p className="text-xl text-yellow-500 tracking-widest mt-2 animate-pulse">
-                  THE JUDGE IS DELIBERATING
-                </p>
-              </motion.div>
+                  speakerSide="left"
+                />
+              </div>
             )}
-          </AnimatePresence>
 
-          {status === "debating" && (
-            <h1 className="text-6xl text-arena-red italic font-bold drop-shadow-[0_0_30px_rgba(255,60,60,1)] absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
-              VS
-            </h1>
+            {/* Dialogue for the Right */}
+            {!isIntroPlaying && !isComplete && isBSpeaking && (
+              <div className="absolute right-[8%] top-4 z-70 w-[62%]">
+                <DialogueBox
+                  speakerName={fighterB.name}
+                  rawText={rawText}
+                  isJudge={isJudge}
+                  onTypingComplete={() => {
+                    if (visualTurnIndex < networkTurns.length - 1) {
+                      if (advanceTimerRef.current) {
+                        clearTimeout(advanceTimerRef.current);
+                      }
+
+                      advanceTimerRef.current = setTimeout(() => {
+                        advanceVisualTurn();
+                        advanceTimerRef.current = null;
+                      }, 1500);
+                    }
+                  }}
+                  speakerSide="right"
+                />
+              </div>
+            )}
+
+            {/* Dialogue for the Judge */}
+            {!isIntroPlaying && !isComplete && isJudge && (
+              <div className="absolute left-1/2 top-4 z-70 w-[70%] -translate-x-1/2">
+                <DialogueBox
+                  speakerName="THE JUDGE"
+                  rawText={rawText}
+                  isJudge={isJudge}
+                  onTypingComplete={() => {
+                    if (visualTurnIndex < networkTurns.length - 1) {
+                      if (advanceTimerRef.current) {
+                        clearTimeout(advanceTimerRef.current);
+                      }
+
+                      advanceTimerRef.current = setTimeout(() => {
+                        advanceVisualTurn();
+                        advanceTimerRef.current = null;
+                      }, 1500);
+                    }
+                  }}
+                  speakerSide="right"
+                />
+              </div>
+            )}
+
+            {/* VS or Judge Graphic */}
+            <div className="absolute inset-0 z-50 pointer-events-none">
+              {/* The Judge's Descent */}
+              <AnimatePresence>
+                {status === "judging" && (
+                  <motion.div
+                    initial={{ y: -500, opacity: 0, scale: 2 }}
+                    animate={{ y: -50, opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ type: "spring", damping: 12, stiffness: 50 }}
+                    className="absolute left-1/2 bottom-32 -translate-x-1/2 flex flex-col items-center z-40 pointer-events-none"
+                  >
+                    <motion.div
+                      animate={{ y: [0, -10, 0] }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 3,
+                        ease: "easeInOut",
+                      }}
+                      className="text-9xl drop-shadow-[0_0_30px_rgba(255,255,255,0.8)] mb-6"
+                    >
+                      ⚖️
+                    </motion.div>
+                    <h2 className="text-3xl text-white font-black tracking-[0.5em] uppercase drop-shadow-lg">
+                      SILENCE
+                    </h2>
+                    <p className="text-xl text-yellow-500 tracking-widest mt-2 animate-pulse">
+                      THE JUDGE IS DELIBERATING
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {status === "debating" && (
+                <h1 className="text-6xl text-arena-red italic font-bold drop-shadow-[0_0_30px_rgba(255,60,60,1)] absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
+                  VS
+                </h1>
+              )}
+            </div>
+
+            <FighterSprite
+              fighter={fighterB}
+              isActive={isBSpeaking}
+              facing="left"
+              hp={hpB}
+              currentIntent={currentIntent}
+              isIntroPlaying={isIntroPlaying}
+              isBeingAttacked={isASpeaking && isAttack}
+              verdict={verdict}
+              userVote={userVote}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Top-Down View Dialogue Box */}
+      <AnimatePresence>
+        {activeCamera === "topDown" &&
+          !isIntroPlaying &&
+          status === "debating" && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-4xl z-30"
+            >
+              <DialogueBox
+                speakerName={speakerName}
+                rawText={rawText}
+                isJudge={false}
+                onTypingComplete={() => {
+                  if (visualTurnIndex < networkTurns.length - 1) {
+                    setTimeout(advanceVisualTurn, 1500);
+                  }
+                }}
+                speakerSide="left"
+              />
+            </motion.div>
           )}
-        </div>
-
-        <FighterSprite
-          fighter={fighterB}
-          isActive={isBSpeaking}
-          facing="left"
-          hp={hpB}
-          currentIntent={currentIntent}
-          isIntroPlaying={isIntroPlaying}
-          isBeingAttacked={isASpeaking && isAttack}
-          verdict={verdict}
-          userVote={userVote}
-        />
-      </motion.div>
+      </AnimatePresence>
 
       {isComplete && showVerdictModal && verdict && (
         <motion.div
