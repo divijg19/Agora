@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { fetchRoster, startMatch } from "../lib/api";
 import type { FighterDef } from "../types/fighter";
@@ -39,6 +39,10 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
 
   const canStart =
     topic.length > 5 && fighterA && fighterB && fighterA !== fighterB;
+  const selectedFighterA =
+    roster.find((fighter) => fighter.id === fighterA) ?? null;
+  const selectedFighterB =
+    roster.find((fighter) => fighter.id === fighterB) ?? null;
 
   const handleRandomTopic = () => {
     const choice =
@@ -66,9 +70,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
   const handleStart = async () => {
     if (!canStart) return;
 
-    const selectedA = roster.find((fighter) => fighter.id === fighterA);
-    const selectedB = roster.find((fighter) => fighter.id === fighterB);
-    if (!selectedA || !selectedB) {
+    if (!selectedFighterA || !selectedFighterB) {
       setError("Failed to connect to the Arena Engine.");
       return;
     }
@@ -81,7 +83,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
         fighter_a: fighterA,
         fighter_b: fighterB,
       });
-      onMatchStarted(matchId, topic, selectedA, selectedB);
+      onMatchStarted(matchId, topic, selectedFighterA, selectedFighterB);
     } catch {
       setError("Failed to connect to the Arena Engine.");
       setIsLoading(false);
@@ -135,29 +137,68 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
             <h2 className="text-2xl text-arena-blue mb-2 text-center">
               FIGHTER A
             </h2>
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-2 gap-4">
               {roster.map((f) => (
-                <button
+                <motion.button
                   type="button"
                   key={`a-${f.id}`}
                   onClick={() => setFighterA(f.id)}
                   disabled={fighterB === f.id}
-                  className={`p-2.5 border-2 text-left transition-all ${
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`flex flex-col items-center justify-center p-4 border-4 transition-all ${
                     fighterA === f.id
-                      ? "border-arena-blue bg-arena-blue/20 translate-x-2"
+                      ? "border-arena-blue bg-arena-blue/20"
                       : "border-arena-border hover:border-gray-500 opacity-70 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
                   }`}
                 >
                   <img
                     src={f.animations.idle}
                     alt={f.name}
-                    className="w-24 h-24 object-cover mb-4 pixelated shadow-2xl border-2 border-gray-800"
+                    className="w-20 h-20 object-cover mb-2 pixelated shadow-2xl border-2 border-gray-800"
                     style={{ imageRendering: "pixelated" }}
                   />
-                  <div className="text-xl font-bold">{f.name}</div>
-                  <div className="text-sm text-gray-400">{f.tagline}</div>
-                </button>
+                  <div className="text-base font-bold text-center">
+                    {f.name}
+                  </div>
+                </motion.button>
               ))}
+            </div>
+
+            {/* Selected Fighter Showcase */}
+            <div className="mt-8 h-48 flex flex-col items-center justify-end relative overflow-hidden">
+              <AnimatePresence mode="wait">
+                {selectedFighterA ? (
+                  <motion.div
+                    key={selectedFighterA.id}
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 50, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                    className="flex flex-col items-center"
+                  >
+                    <img
+                      src={selectedFighterA.animations.idle}
+                      alt={selectedFighterA.name}
+                      className="h-40 object-cover pixelated drop-shadow-[0_0_15px_rgba(60,130,255,0.5)]"
+                      style={{ imageRendering: "pixelated" }}
+                    />
+                    <div className="absolute bottom-2 bg-black/80 px-4 py-1 border-t-2 border-arena-blue text-arena-blue font-mono tracking-widest text-sm">
+                      "{selectedFighterA.tagline}"
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="empty-a"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-gray-600 font-mono tracking-widest uppercase text-xl animate-pulse pb-10"
+                  >
+                    AWAITING SELECTION...
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
@@ -166,29 +207,71 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
             <h2 className="text-2xl text-arena-red mb-2 text-center">
               FIGHTER B
             </h2>
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-2 gap-4">
               {roster.map((f) => (
-                <button
+                <motion.button
                   type="button"
                   key={`b-${f.id}`}
                   onClick={() => setFighterB(f.id)}
                   disabled={fighterA === f.id}
-                  className={`p-2.5 border-2 text-left transition-all ${
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`flex flex-col items-center justify-center p-4 border-4 transition-all ${
                     fighterB === f.id
-                      ? "border-arena-red bg-arena-red/20 -translate-x-2"
+                      ? "border-arena-red bg-arena-red/20"
                       : "border-arena-border hover:border-gray-500 opacity-70 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
                   }`}
                 >
                   <img
                     src={f.animations.idle}
                     alt={f.name}
-                    className="w-24 h-24 object-cover mb-4 pixelated shadow-2xl border-2 border-gray-800"
+                    className="w-20 h-20 object-cover mb-2 pixelated shadow-2xl border-2 border-gray-800"
                     style={{ imageRendering: "pixelated" }}
                   />
-                  <div className="text-xl font-bold">{f.name}</div>
-                  <div className="text-sm text-gray-400">{f.tagline}</div>
-                </button>
+                  <div className="text-base font-bold text-center">
+                    {f.name}
+                  </div>
+                </motion.button>
               ))}
+            </div>
+
+            {/* Selected Fighter Showcase */}
+            <div className="mt-8 h-48 flex flex-col items-center justify-end relative overflow-hidden">
+              <AnimatePresence mode="wait">
+                {selectedFighterB ? (
+                  <motion.div
+                    key={selectedFighterB.id}
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 50, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                    className="flex flex-col items-center"
+                  >
+                    <img
+                      src={selectedFighterB.animations.idle}
+                      alt={selectedFighterB.name}
+                      className="h-40 object-cover pixelated drop-shadow-[0_0_15px_rgba(255,60,60,0.5)]"
+                      style={{
+                        imageRendering: "pixelated",
+                        transform: "scaleX(-1)",
+                      }}
+                    />
+                    <div className="absolute bottom-2 bg-black/80 px-4 py-1 border-t-2 border-arena-red text-arena-red font-mono tracking-widest text-sm">
+                      "{selectedFighterB.tagline}"
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="empty-b"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-gray-600 font-mono tracking-widest uppercase text-xl animate-pulse pb-10"
+                  >
+                    AWAITING SELECTION...
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
