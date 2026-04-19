@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { fetchRoster, startMatch } from "../lib/api";
 import type { FighterDef } from "../types/fighter";
+import { ParallaxBackground } from "./ParallaxBackground";
 
 interface SetupScreenProps {
   onMatchStarted: (
@@ -91,115 +92,121 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, y: -50 }}
-      className="max-w-4xl w-full mx-auto p-4 md:p-5 bg-arena-panel border-4 border-arena-border shadow-2xl relative z-10 h-[92vh]"
+      exit={{ opacity: 0, y: -50, scale: 1.1 }}
+      className="max-w-7xl w-full mx-auto p-8 relative z-10 min-h-[90vh] flex flex-col justify-center"
     >
-      <h1 className="text-4xl md:text-5xl text-center text-arena-red mb-4 tracking-widest drop-shadow-[0_0_8px_#ff3c3c]">
-        SELECT YOUR DUEL
-      </h1>
+      <ParallaxBackground />
 
-      <div className="mb-4">
-        <label
-          htmlFor="debate-topic"
-          className="block text-arena-text text-xl mb-2"
-        >
-          ENTER THE TOPIC:
-        </label>
-        <div className="flex flex-col md:flex-row gap-2">
-          <input
-            id="debate-topic"
-            type="text"
-            value={topic}
-            maxLength={100}
-            onChange={(e) => setTopic(e.target.value)}
-            placeholder="e.g. Is artificial intelligence a threat to humanity?"
-            className="w-full bg-black border-2 border-arena-border p-3 text-lg text-arena-text focus:outline-none focus:border-arena-blue transition-colors"
-          />
+      <div className="max-w-4xl w-full mx-auto p-4 md:p-5 bg-black/80 backdrop-blur-md border-4 border-arena-border shadow-2xl relative z-10">
+        <h1 className="text-4xl md:text-5xl text-center text-arena-red mb-4 tracking-widest drop-shadow-[0_0_8px_#ff3c3c]">
+          SELECT YOUR DUEL
+        </h1>
+
+        <div className="mb-4">
+          <label
+            htmlFor="debate-topic"
+            className="block text-arena-text text-xl mb-2"
+          >
+            ENTER THE TOPIC:
+          </label>
+          <div className="flex flex-col md:flex-row gap-2">
+            <input
+              id="debate-topic"
+              type="text"
+              value={topic}
+              maxLength={100}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="e.g. Is artificial intelligence a threat to humanity?"
+              className="w-full bg-black border-2 border-arena-border p-3 text-lg text-arena-text focus:outline-none focus:border-arena-blue transition-colors"
+            />
+            <button
+              type="button"
+              onClick={handleRandomTopic}
+              className="px-4 py-3 border-2 border-yellow-500 text-yellow-400 hover:bg-yellow-500 hover:text-black transition-colors whitespace-nowrap"
+            >
+              🎲 RANDOM TOPIC
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* Fighter A Selection */}
+          <div>
+            <h2 className="text-2xl text-arena-blue mb-2 text-center">
+              FIGHTER A
+            </h2>
+            <div className="flex flex-col gap-3">
+              {roster.map((f) => (
+                <button
+                  type="button"
+                  key={`a-${f.id}`}
+                  onClick={() => setFighterA(f.id)}
+                  disabled={fighterB === f.id}
+                  className={`p-2.5 border-2 text-left transition-all ${
+                    fighterA === f.id
+                      ? "border-arena-blue bg-arena-blue/20 translate-x-2"
+                      : "border-arena-border hover:border-gray-500 opacity-70 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                  }`}
+                >
+                  <img
+                    src={f.animations.idle}
+                    alt={f.name}
+                    className="w-24 h-24 object-cover mb-4 pixelated shadow-2xl border-2 border-gray-800"
+                    style={{ imageRendering: "pixelated" }}
+                  />
+                  <div className="text-xl font-bold">{f.name}</div>
+                  <div className="text-sm text-gray-400">{f.tagline}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Fighter B Selection */}
+          <div>
+            <h2 className="text-2xl text-arena-red mb-2 text-center">
+              FIGHTER B
+            </h2>
+            <div className="flex flex-col gap-3">
+              {roster.map((f) => (
+                <button
+                  type="button"
+                  key={`b-${f.id}`}
+                  onClick={() => setFighterB(f.id)}
+                  disabled={fighterA === f.id}
+                  className={`p-2.5 border-2 text-left transition-all ${
+                    fighterB === f.id
+                      ? "border-arena-red bg-arena-red/20 -translate-x-2"
+                      : "border-arena-border hover:border-gray-500 opacity-70 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                  }`}
+                >
+                  <img
+                    src={f.animations.idle}
+                    alt={f.name}
+                    className="w-24 h-24 object-cover mb-4 pixelated shadow-2xl border-2 border-gray-800"
+                    style={{ imageRendering: "pixelated" }}
+                  />
+                  <div className="text-xl font-bold">{f.name}</div>
+                  <div className="text-sm text-gray-400">{f.tagline}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {error && (
+          <div className="text-arena-red text-center mb-2">{error}</div>
+        )}
+
+        <div className="text-center">
           <button
             type="button"
-            onClick={handleRandomTopic}
-            className="px-4 py-3 border-2 border-yellow-500 text-yellow-400 hover:bg-yellow-500 hover:text-black transition-colors whitespace-nowrap"
+            onClick={handleStart}
+            disabled={!canStart || isLoading}
+            className="text-2xl md:text-3xl px-10 py-3 border-4 border-arena-text hover:bg-arena-text hover:text-black transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-arena-text"
           >
-            🎲 RANDOM TOPIC
+            {isLoading ? "INITIALIZING..." : "ENTER ARENA"}
           </button>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        {/* Fighter A Selection */}
-        <div>
-          <h2 className="text-2xl text-arena-blue mb-2 text-center">
-            FIGHTER A
-          </h2>
-          <div className="flex flex-col gap-3">
-            {roster.map((f) => (
-              <button
-                type="button"
-                key={`a-${f.id}`}
-                onClick={() => setFighterA(f.id)}
-                disabled={fighterB === f.id}
-                className={`p-2.5 border-2 text-left transition-all ${
-                  fighterA === f.id
-                    ? "border-arena-blue bg-arena-blue/20 translate-x-2"
-                    : "border-arena-border hover:border-gray-500 opacity-70 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                }`}
-              >
-                <img
-                  src={f.animations.idle}
-                  alt={f.name}
-                  className="w-24 h-24 object-cover mb-4 pixelated shadow-2xl border-2 border-gray-800"
-                  style={{ imageRendering: "pixelated" }}
-                />
-                <div className="text-xl font-bold">{f.name}</div>
-                <div className="text-sm text-gray-400">{f.tagline}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Fighter B Selection */}
-        <div>
-          <h2 className="text-2xl text-arena-red mb-2 text-center">
-            FIGHTER B
-          </h2>
-          <div className="flex flex-col gap-3">
-            {roster.map((f) => (
-              <button
-                type="button"
-                key={`b-${f.id}`}
-                onClick={() => setFighterB(f.id)}
-                disabled={fighterA === f.id}
-                className={`p-2.5 border-2 text-left transition-all ${
-                  fighterB === f.id
-                    ? "border-arena-red bg-arena-red/20 -translate-x-2"
-                    : "border-arena-border hover:border-gray-500 opacity-70 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                }`}
-              >
-                <img
-                  src={f.animations.idle}
-                  alt={f.name}
-                  className="w-24 h-24 object-cover mb-4 pixelated shadow-2xl border-2 border-gray-800"
-                  style={{ imageRendering: "pixelated" }}
-                />
-                <div className="text-xl font-bold">{f.name}</div>
-                <div className="text-sm text-gray-400">{f.tagline}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {error && <div className="text-arena-red text-center mb-2">{error}</div>}
-
-      <div className="text-center">
-        <button
-          type="button"
-          onClick={handleStart}
-          disabled={!canStart || isLoading}
-          className="text-2xl md:text-3xl px-10 py-3 border-4 border-arena-text hover:bg-arena-text hover:text-black transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-arena-text"
-        >
-          {isLoading ? "INITIALIZING..." : "ENTER ARENA"}
-        </button>
       </div>
     </motion.div>
   );
