@@ -144,6 +144,12 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
                     : "border-arena-border hover:border-gray-500 opacity-70 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
                 }`}
               >
+                <img
+                  src={f.animations.idle}
+                  alt={f.name}
+                  className="w-24 h-24 object-cover mb-4 pixelated shadow-2xl border-2 border-gray-800"
+                  style={{ imageRendering: "pixelated" }}
+                />
                 <div className="text-xl font-bold">{f.name}</div>
                 <div className="text-sm text-gray-400">{f.tagline}</div>
               </button>
@@ -169,6 +175,12 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
                     : "border-arena-border hover:border-gray-500 opacity-70 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
                 }`}
               >
+                <img
+                  src={f.animations.idle}
+                  alt={f.name}
+                  className="w-24 h-24 object-cover mb-4 pixelated shadow-2xl border-2 border-gray-800"
+                  style={{ imageRendering: "pixelated" }}
+                />
                 <div className="text-xl font-bold">{f.name}</div>
                 <div className="text-sm text-gray-400">{f.tagline}</div>
               </button>

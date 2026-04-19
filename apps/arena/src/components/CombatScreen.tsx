@@ -148,41 +148,59 @@ export function CombatScreen({
       }
       className="max-w-6xl w-full mx-auto p-4 flex flex-col h-[85vh] relative z-10"
     >
-      {/* 3D Synthwave Grid Background (Animated Camera Pan) */}
-      <motion.div
-        animate={{ opacity: isComplete || status === "judging" ? 0.05 : 0.2 }}
-        transition={{ duration: 1.5 }}
-        className="absolute inset-0 overflow-hidden pointer-events-none -z-10"
-      >
-        <div className="absolute bottom-0 left-0 right-0 h-[40vh] bg-linear-to-t from-arena-blue/30 to-transparent" />
-
-        {/* The Judge's Spotlight (Only visible during climax) */}
+      {/* 2.5D Parallax Colosseum Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 bg-gray-950">
+        {/* Layer 1: Deep Background (Sky/Architecture) - Slowest Pan */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isComplete || status === "judging" ? 1 : 0 }}
-          transition={{ duration: 1.5, ease: "easeInOut" }}
-          className="absolute inset-0 z-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(circle at 50% 30%, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.9) 60%, rgba(0,0,0,1) 100%)",
-          }}
-        />
-
-        <motion.div
-          className="w-[200%] h-[50vh] absolute bottom-0 -left-[50%]"
-          animate={{
-            x: isASpeaking ? "5%" : isBSpeaking ? "-5%" : "0%",
-          }}
-          transition={{ type: "spring", stiffness: 30, damping: 20 }}
+          animate={{ x: isASpeaking ? "2%" : isBSpeaking ? "-2%" : "0%" }}
+          transition={{ type: "spring", stiffness: 20, damping: 30 }}
+          className="absolute inset-[-10%] w-[120%] h-full bg-gray-900 opacity-50"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(60, 130, 255, 0.4) 2px, transparent 2px), linear-gradient(90deg, rgba(60, 130, 255, 0.4) 2px, transparent 2px)",
-            backgroundSize: "40px 40px",
-            transform: "perspective(500px) rotateX(60deg)",
-            transformOrigin: "bottom center",
+              'url("https://placehold.co/1920x1080/111/333?text=DEEP+BACKGROUND")',
+            backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
         />
-      </motion.div>
+
+        {/* Layer 2: The Crowd - Medium Pan + CSS Bounce */}
+        <motion.div
+          animate={{ x: isASpeaking ? "5%" : isBSpeaking ? "-5%" : "0%" }}
+          transition={{ type: "spring", stiffness: 30, damping: 25 }}
+          className="absolute inset-[-10%] w-[120%] h-full opacity-60"
+        >
+          <div
+            className="w-full h-full animate-[bounce_2s_infinite]"
+            style={{
+              backgroundImage:
+                'url("https://placehold.co/1920x1080/222/444?text=THE+CROWD")',
+              backgroundSize: "cover",
+              backgroundPosition: "bottom",
+            }}
+          />
+        </motion.div>
+
+        {/* Layer 3: Stage Floor - Fastest Pan for Depth */}
+        <motion.div
+          animate={{ x: isASpeaking ? "10%" : isBSpeaking ? "-10%" : "0%" }}
+          transition={{ type: "spring", stiffness: 40, damping: 20 }}
+          className="absolute bottom-0 left-[-20%] w-[140%] h-[30vh] border-t-4 border-gray-800"
+          style={{
+            backgroundImage:
+              'url("https://placehold.co/1920x400/000/222?text=STAGE+FLOOR")',
+            backgroundSize: "cover",
+          }}
+        />
+
+        {/* Aggressive Pulse Overlay (Keep from previous) */}
+        <motion.div
+          animate={{ opacity: isAttack ? [0, 0.8, 0] : 0 }}
+          transition={
+            isAttack ? { duration: 0.3, ease: "easeOut" } : { duration: 0 }
+          }
+          className="absolute inset-0 bg-arena-red/30 mix-blend-overlay"
+        />
+      </div>
 
       {/* Header Topic & Turn Indicator */}
       <AnimatePresence>
@@ -378,7 +396,12 @@ export function CombatScreen({
                     whileHover={{ scale: 1.05, y: -5 }}
                     className={`px-8 py-6 border-[6px] ${fighterABorderClass} bg-neutral-900 hover:bg-neutral-800 transition-colors flex flex-col items-center w-full`}
                   >
-                    <span className="text-5xl mb-2">{fighterA.avatar}</span>
+                    <img
+                      src={fighterA.animations.idle}
+                      alt={fighterA.name}
+                      className="w-24 h-24 object-cover mb-2 pixelated shadow-2xl border-2 border-gray-800"
+                      style={{ imageRendering: "pixelated" }}
+                    />
                     <span className="text-xl font-bold uppercase">
                       {fighterA.name}
                     </span>
@@ -389,7 +412,12 @@ export function CombatScreen({
                     whileHover={{ scale: 1.05, y: -5 }}
                     className={`px-8 py-6 border-[6px] ${fighterBBorderClass} bg-neutral-900 hover:bg-neutral-800 transition-colors flex flex-col items-center w-full`}
                   >
-                    <span className="text-5xl mb-2">{fighterB.avatar}</span>
+                    <img
+                      src={fighterB.animations.idle}
+                      alt={fighterB.name}
+                      className="w-24 h-24 object-cover mb-2 pixelated shadow-2xl border-2 border-gray-800"
+                      style={{ imageRendering: "pixelated" }}
+                    />
                     <span className="text-xl font-bold uppercase">
                       {fighterB.name}
                     </span>
