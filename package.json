@@ -1,28 +1,29 @@
 {
-  "name": "agora-monorepo",
-  "version": "0.0.1",
-  "private": true,
-  "workspaces": [
-    "apps/*"
-  ],
-  "scripts": {
-    "dev": "concurrently \"bun run dev:engine\" \"bun run dev:arena\"",
-    "dev:engine": "cd apps/engine && uv run uvicorn main:app --reload --port 8000",
-    "dev:arena": "cd apps/arena && bun run dev",
-    "lint": "concurrently \"bun run lint:engine\" \"bun run lint:arena\"",
-    "lint:engine": "cd apps/engine && uv run ruff check .",
-    "lint:arena": "cd apps/arena && bun lint && bun format",
-    "lint:web": "cd apps/web && bun lint && bun format",
-    "type": "concurrently \"bun run type:engine\" \"bun run type:arena\"",
-    "type:engine": "cd apps/engine && uv run ty check .",
-    "type:arena": "cd apps/arena && bun type",
-    "type:web": "cd apps/web && bun type",
-    "qa": "bun lint && bun type"
-  },
-  "devDependencies": {
-    "concurrently": "^9.2.1"
-  },
-  "dependencies": {
-    "@biomejs/biome": "^2.4.12"
-  }
+	"name": "agora-monorepo",
+	"version": "0.0.1",
+	"private": true,
+	"workspaces": [
+		"apps/*"
+	],
+	"scripts": {
+		"dev": "concurrently \"bun run dev:engine\" \"bun run dev:arena\" \"bun run dev:web\"",
+		"dev:engine": "cd apps/engine && uv run uvicorn main:app --reload --port 8000",
+		"dev:arena": "cd apps/arena && bun run dev",
+		"dev:web": "cd apps/web && bun run dev",
+		"lint": "bun lint:engine && bun lint:arena && bun lint:web",
+		"lint:engine": "cd apps/engine && uv run ruff check .",
+		"lint:arena": "cd apps/arena && bun lint && bun format",
+		"lint:web": "cd apps/web && bun lint && bun format",
+		"type": "bun type:engine && bun type:arena && bun type:web",
+		"type:engine": "cd apps/engine && uv run ty check .",
+		"type:arena": "cd apps/arena && bun type",
+		"type:web": "cd apps/web && bun type",
+		"qa": "bun lint && bun type"
+	},
+	"devDependencies": {
+		"concurrently": "^9.2.1"
+	},
+	"dependencies": {
+		"@biomejs/biome": "^2.4.12"
+	}
 }

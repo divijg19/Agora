@@ -6,6 +6,8 @@ out/
 dist/
 dist-ssr/
 coverage/
+.next/
+build/
 *.lcov
 *.tgz
 *.tsbuildinfo
@@ -25,6 +27,10 @@ __pycache__/
 *.pyc
 .venv/
 .ruff_cache/
+
+# next/vercel
+.vercel/
+next-env.d.ts
 
 # dotenv environment variable files
 .env
@@ -47,6 +53,8 @@ __pycache__/
 *.njsproj
 *.sln
 *.sw?
+AGENTS.md
 
 # Finder (MacOS) folder config
 .DS_Store
+*.pem
