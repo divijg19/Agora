@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/Navbar";
+import { RosterSection } from "@/components/RosterSection";
 
 export default function Home() {
   return (
@@ -48,15 +49,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Placeholder for scroll length */}
-      <section
-        id="features"
-        className="h-screen flex items-center justify-center"
-      >
-        <h2 className="text-5xl font-mono text-gray-600">
-          SCROLL DOWN TO TEST NAVBAR
-        </h2>
-      </section>
+      {/* The Lore/Roster Section */}
+      <RosterSection />
     </main>
   );
 }
