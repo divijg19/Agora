@@ -50,7 +50,8 @@ export function useEngineStream(matchId: string | null) {
     pendingTurnRef.current = null;
     turnIdRef.current = 0;
 
-    const sse = new EventSource(`http://localhost:8000/api/stream/${matchId}`);
+    const baseUrl = import.meta.env.VITE_ENGINE_URL || "http://localhost:8000";
+    const sse = new EventSource(`${baseUrl}/api/stream/${matchId}`);
     eventSourceRef.current = sse;
 
     sse.addEventListener("turn_start", (e) => {

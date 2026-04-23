@@ -11,7 +11,9 @@ export interface MatchResponse {
   match_id: string;
 }
 
-const API_BASE = "http://localhost:8000/api";
+const API_BASE = import.meta.env.VITE_ENGINE_URL
+  ? `${import.meta.env.VITE_ENGINE_URL}/api`
+  : "http://localhost:8000/api";
 
 export async function startMatch(data: MatchRequest): Promise<string> {
   const res = await fetch(`${API_BASE}/match/start`, {
