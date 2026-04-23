@@ -37,6 +37,7 @@ export function FighterSprite({
   const [showCallout, setShowCallout] = useState(false);
   const currentIntentKey = currentIntent ?? "";
   const isCounter = currentIntentKey === "counter";
+  const isMirrored = facing === "left";
   const isPointing =
     isActive &&
     POINTING_INTENTS.includes(
@@ -158,7 +159,7 @@ export function FighterSprite({
           alt={`${fighter.name} ${isPointing ? "pointing" : "idle"}`}
           className="w-full h-full object-cover pixelated"
           style={{
-            transform: facing === "left" ? "scaleX(-1)" : "none",
+            transform: isMirrored ? "scaleX(-1)" : "none",
             imageRendering: "pixelated",
           }}
         />

@@ -128,10 +128,11 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
                 ? "brightness(1) drop-shadow(0 0 30px rgba(255,60,60,0.5))"
                 : "brightness(0)",
             x: hoveredB || fighterB ? -20 : 50,
+            scaleX: -1,
           }}
           transition={{ type: "spring", stiffness: 100 }}
           className="h-full object-cover pixelated"
-          style={{ imageRendering: "pixelated", transform: "scaleX(-1)" }}
+          style={{ imageRendering: "pixelated" }}
         />
       </div>
 
