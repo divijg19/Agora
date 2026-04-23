@@ -1,0 +1,4 @@
+[environment]
+root = ["./apps/engine"]
+python = "./apps/engine/.venv"
+python-version = "3.14"
