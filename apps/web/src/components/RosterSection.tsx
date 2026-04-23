@@ -63,6 +63,11 @@ export async function RosterSection() {
             // Convert bg-color to border-color for the cards.
             const borderColor = fighter.color.replace("bg-", "border-");
             const textColor = fighter.color.replace("bg-", "text-");
+            const spriteFolder =
+              fighter.id.charAt(0).toUpperCase() + fighter.id.slice(1);
+            const idleHeadshot =
+              fighter.animations?.idle ??
+              `/sprites/${spriteFolder}/${spriteFolder}_Idle.gif`;
 
             return (
               <div
@@ -73,12 +78,12 @@ export async function RosterSection() {
                 <div className="flex items-center gap-6">
                   <div className="w-24 h-24 bg-gray-900 border-2 border-gray-700 flex items-center justify-center overflow-hidden shrink-0">
                     <Image
-                      src={fighter.animations.idle}
-                      alt={fighter.name}
+                      src={idleHeadshot}
+                      alt={`${fighter.name} idle headshot`}
                       width={96}
                       height={96}
                       unoptimized
-                      className="w-full h-full object-cover pixelated"
+                      className="w-full h-full object-cover object-top scale-125 pixelated"
                       style={{ imageRendering: "pixelated" }}
                     />
                   </div>
