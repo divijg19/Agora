@@ -1,11 +1,14 @@
-import Image from "next/image";
 import type { FighterDef } from "@/types/fighter";
+import Image from "next/image";
 
 async function getRoster(): Promise<FighterDef[]> {
+  const apiBaseUrl =
+    process.env.ENGINE_API_BASE_URL ??
+    process.env.NEXT_PUBLIC_ENGINE_API_BASE_URL ??
+    "http://127.0.0.1:8000";
+
   try {
-    // Fetch directly from the Python Engine.
-    // In production, this URL would come from an environment variable.
-    const res = await fetch("http://127.0.0.1:8000/api/match/roster", {
+    const res = await fetch(`${apiBaseUrl}/api/match/roster`, {
       next: { revalidate: 60 },
     });
 
@@ -15,8 +18,7 @@ async function getRoster(): Promise<FighterDef[]> {
 
     const data = await res.json();
     return data.roster;
-  } catch (error) {
-    console.error(error);
+  } catch {
     return [];
   }
 }

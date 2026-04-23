@@ -8,6 +8,7 @@ export interface FighterDef {
   color: string;
   animations: {
     idle: string;
+    pointing: string;
     attack: string;
     stun: string;
     special: string;

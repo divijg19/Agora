@@ -3,6 +3,13 @@ import { useEffect, useState } from "react";
 import type { MatchVerdict } from "../hooks/useEngineStream";
 import type { FighterDef } from "../types/fighter";
 
+const POINTING_INTENTS = [
+  "counter",
+  "rebuttal",
+  "attack",
+  "objection",
+] as const;
+
 interface FighterSpriteProps {
   fighter: FighterDef;
   isActive: boolean;
@@ -28,6 +35,13 @@ export function FighterSprite({
 }: FighterSpriteProps) {
   const [isStunned, setIsStunned] = useState(false);
   const [showCallout, setShowCallout] = useState(false);
+  const currentIntentKey = currentIntent ?? "";
+  const isCounter = currentIntentKey === "counter";
+  const isPointing =
+    isActive &&
+    POINTING_INTENTS.includes(
+      currentIntentKey as (typeof POINTING_INTENTS)[number],
+    );
 
   useEffect(() => {
     if (isBeingAttacked) {
@@ -40,25 +54,19 @@ export function FighterSprite({
   }, [isBeingAttacked]);
 
   useEffect(() => {
-    if (
-      isActive &&
-      (currentIntent === "counter" || currentIntent === "rebuttal")
-    ) {
+    if (isPointing) {
       setShowCallout(true);
       const timer = setTimeout(() => setShowCallout(false), 1500);
       return () => clearTimeout(timer);
     }
 
     setShowCallout(false);
-  }, [isActive, currentIntent]);
+  }, [isPointing]);
 
-  const isAttack =
-    isActive && (currentIntent === "counter" || currentIntent === "rebuttal");
   const isDefeated = verdict && userVote && verdict.winner_id !== fighter.id;
-
-  let currentState: "idle" | "attack" | "stun" | "special" = "idle";
-  if (isStunned) currentState = "stun";
-  else if (isAttack) currentState = "attack";
+  const spriteSrc = isPointing
+    ? fighter.animations.pointing
+    : fighter.animations.idle;
 
   let spriteAnimation = {};
   let spriteTransition = {};
@@ -72,7 +80,7 @@ export function FighterSprite({
     };
     spriteTransition = { duration: 1.5, ease: "easeIn" };
   } else if (isActive) {
-    if (isAttack) {
+    if (isPointing) {
       spriteAnimation = {
         x: facing === "right" ? [0, 40, 0] : [0, -40, 0],
         y: [0, -10, 0],
@@ -80,13 +88,6 @@ export function FighterSprite({
         filter: "brightness(1.5) drop-shadow(0 0 15px rgba(255,255,255,0.5))",
       };
       spriteTransition = { duration: 0.3, ease: "easeOut" };
-    } else {
-      spriteAnimation = {
-        y: [0, -5, 0],
-        scale: 1.05,
-        filter: "brightness(1.2)",
-      };
-      spriteTransition = { repeat: Infinity, duration: 1.5, ease: "easeInOut" };
     }
   } else if (isStunned) {
     // The Hit Stun State
@@ -153,8 +154,8 @@ export function FighterSprite({
         className="w-40 h-56 flex items-center justify-center relative overflow-hidden drop-shadow-2xl"
       >
         <img
-          src={fighter.animations[currentState]}
-          alt={`${fighter.name} ${currentState}`}
+          src={spriteSrc}
+          alt={`${fighter.name} ${isPointing ? "pointing" : "idle"}`}
           className="w-full h-full object-cover pixelated"
           style={{
             transform: facing === "left" ? "scaleX(-1)" : "none",
@@ -186,10 +187,10 @@ export function FighterSprite({
             <span
               className="text-5xl font-black italic uppercase tracking-tighter drop-shadow-[0_5px_0_rgba(0,0,0,1)] text-white"
               style={{
-                WebkitTextStroke: `2px ${currentIntent === "counter" ? "#ff3c3c" : "#eab308"}`,
+                WebkitTextStroke: `2px ${isCounter ? "#ff3c3c" : "#eab308"}`,
               }}
             >
-              {currentIntent === "counter" ? "COUNTER!" : "OBJECTION!"}
+              {isCounter ? "COUNTER!" : "OBJECTION!"}
             </span>
           </motion.div>
         )}
