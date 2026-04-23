@@ -47,9 +47,9 @@ export async function RosterSection() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(60,130,255,0.05)_0%,transparent_70%)] pointer-events-none" />
 
       <div className="max-w-6xl mx-auto relative z-10">
-        <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter mb-4 uppercase">
+        <h2 className="text-5xl md:text-7xl font-black italic tracking-tight leading-tight mb-4 uppercase overflow-visible">
           THE NEURAL{" "}
-          <span className="text-transparent bg-clip-text bg-linear-to-r from-agora-blue to-cyan-500">
+          <span className="inline-block overflow-visible pr-4 md:pr-5 text-transparent bg-clip-text bg-linear-to-r from-agora-blue to-cyan-500">
             ARCHIVE
           </span>
         </h2>
