@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { RosterSection } from "@/components/RosterSection";
+import { WakeUpPing } from "../components/WakeUpPing";
 
 const MARQUEE_SLOGANS = [
   '"DATA OVER FEELINGS."',
@@ -12,11 +13,11 @@ function MarqueeSegment({ duplicate = false }: { duplicate?: boolean }) {
   return (
     <div className="marquee-segment" aria-hidden={duplicate || undefined}>
       {MARQUEE_SLOGANS.flatMap((slogan, index) => [
-        <span key={`s-${index}`} className="text-4xl font-mono text-gray-500">
+        <span key={`s-${slogan}`} className="text-4xl font-mono text-gray-500">
           {slogan}
         </span>,
         <span
-          key={`v-${index}`}
+          key={`v-${slogan}`}
           className={`text-4xl font-black italic ${
             index % 2 === 0 ? "text-agora-red" : "text-agora-blue"
           }`}
@@ -31,6 +32,7 @@ function MarqueeSegment({ duplicate = false }: { duplicate?: boolean }) {
 export default function Home() {
   return (
     <main className="min-h-[200vh] bg-agora-bg text-agora-text selection:bg-agora-red">
+      <WakeUpPing />
       <Navbar />
 
       {/* Hero Section */}
@@ -51,7 +53,7 @@ export default function Home() {
         </p>
 
         <a
-          href="http://localhost:3000"
+          href={process.env.NEXT_PUBLIC_ARENA_URL || "http://localhost:3000"}
           className="mt-16 px-12 py-6 border-2 border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white hover:text-black transition-all text-2xl font-bold tracking-[0.2em] uppercase z-10"
         >
           Initialize Neural Link

@@ -1,14 +1,12 @@
-import type { FighterDef } from "@/types/fighter";
 import Image from "next/image";
+import type { FighterDef } from "@/types/fighter";
 
 async function getRoster(): Promise<FighterDef[]> {
-  const apiBaseUrl =
-    process.env.ENGINE_API_BASE_URL ??
-    process.env.NEXT_PUBLIC_ENGINE_API_BASE_URL ??
-    "http://127.0.0.1:8000";
+  const engineUrl =
+    process.env.NEXT_PUBLIC_ENGINE_URL || "http://127.0.0.1:8000";
 
   try {
-    const res = await fetch(`${apiBaseUrl}/api/match/roster`, {
+    const res = await fetch(`${engineUrl}/api/match/roster`, {
       next: { revalidate: 60 },
     });
 
