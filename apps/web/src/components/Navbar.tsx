@@ -36,7 +36,7 @@ export function Navbar() {
           ROSTER
         </Link>
         <a
-          href="http://localhost:3000"
+          href={process.env.NEXT_PUBLIC_ARENA_URL || "http://localhost:3000"}
           className="px-6 py-2 bg-white text-black font-bold hover:bg-agora-red hover:text-white transition-colors rounded-full"
         >
           ENTER ARENA
