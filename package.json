@@ -24,6 +24,6 @@
 		"concurrently": "^9.2.1"
 	},
 	"dependencies": {
-		"@biomejs/biome": "^2.4.13"
+		"@biomejs/biome": "^2.4.15"
 	}
 }
