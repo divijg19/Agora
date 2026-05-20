@@ -20,24 +20,24 @@ In layman's terms: an **AI debate arena**.
 
 ## 🎮 Core Loop
 
-1. Enter the arena  
-2. Choose fighters  
-3. Set topic  
-4. Watch the duel (live streaming)  
-5. Declare the winner  
+1. Enter the arena
+2. Choose fighters
+3. Set topic
+4. Watch the duel (live streaming)
+5. Declare the winner
 
 ---
 
 ## 🧠 Key Ideas
 
-- **Personas > generic AI**  
-- **Turns > free-form chat**  
-- **Pacing > raw output**  
+- **Personas > generic AI**
+- **Turns > free-form chat**
+- **Pacing > raw output**
 
 Every debate is:
-- structured  
-- concise  
-- intentionally dramatic  
+- structured
+- concise
+- intentionally dramatic
 
 ## 🎯 v1 Scope
 
@@ -49,11 +49,11 @@ Every debate is:
 
 ## 🧩 Features
 
-- ⚔️ Persona-based fighters  
-- 🔄 Turn-based debate engine  
-- ⚡ Live streaming (SSE)  
-- 🧠 AI judge (optional)  
-- 🎮 Retro arena-style UI  
+- ⚔️ Persona-based fighters
+- 🔄 Turn-based debate engine
+- ⚡ Live streaming (SSE)
+- 🧠 AI judge (optional)
+- 🎮 Retro arena-style UI
 
 ---
 
@@ -133,7 +133,3 @@ Detailed documentation lives in `/docs`:
 
 > AI shouldn’t just answer.
 > It should **argue, perform, and compete.**
-
----
-
-### Enter the arena.

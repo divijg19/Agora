@@ -114,7 +114,7 @@ export function FighterSprite({
 
   // Map the tailwind bg classes to border colors for the portrait frame
   const borderColorClass = fighter.color.replace("bg-", "border-");
-  const yOffset = fighter.id === "economist" ? "8%" : "0%";
+  const yOffset = fighter.id === "economist" ? "4%" : "0%";
 
   return (
     <motion.div
