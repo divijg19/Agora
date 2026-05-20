@@ -113,7 +113,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
             x: hoveredA || fighterA ? 20 : -50,
             y:
               (hoveredA || fighterA || roster[0])?.id === "economist"
-                ? "8%"
+                ? "4%"
                 : "0%",
           }}
           transition={{ type: "spring", stiffness: 100 }}
@@ -134,7 +134,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
             x: hoveredB || fighterB ? -20 : 50,
             y:
               (hoveredB || fighterB || roster[1])?.id === "economist"
-                ? "8%"
+                ? "4%"
                 : "0%",
             scaleX: -1,
           }}
