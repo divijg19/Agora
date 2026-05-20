@@ -114,6 +114,7 @@ export function FighterSprite({
 
   // Map the tailwind bg classes to border colors for the portrait frame
   const borderColorClass = fighter.color.replace("bg-", "border-");
+  const yOffset = fighter.id === "economist" ? "8%" : "0%";
 
   return (
     <motion.div
@@ -152,14 +153,15 @@ export function FighterSprite({
       <motion.div
         animate={spriteAnimation}
         transition={spriteTransition}
-        className="w-40 h-56 flex items-center justify-center relative overflow-hidden drop-shadow-2xl"
+        className="w-auto h-72 flex items-end justify-center relative overflow-visible drop-shadow-2xl"
+        style={{ transformOrigin: "bottom center" }}
       >
         <img
           src={spriteSrc}
           alt={`${fighter.name} ${isPointing ? "pointing" : "idle"}`}
-          className="w-full h-full object-cover pixelated"
+          className="h-full w-auto max-w-none object-contain object-bottom pixelated"
           style={{
-            transform: isMirrored ? "scaleX(-1)" : "none",
+            transform: `translateY(${yOffset}) ${isMirrored ? "scaleX(-1)" : ""}`,
             imageRendering: "pixelated",
           }}
         />

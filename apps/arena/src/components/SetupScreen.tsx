@@ -102,7 +102,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
 
       {/* GIANT SILHOUETTES (Background Layer) */}
       {/* Player 1 Silhouette (Left) */}
-      <div className="absolute left-0 bottom-0 h-[80vh] w-1/3 pointer-events-none z-0 flex items-end justify-start opacity-40">
+      <div className="absolute left-0 bottom-0 h-[80vh] w-1/2 pointer-events-none z-0 flex items-end justify-start opacity-40 overflow-visible">
         <motion.img
           src={(hoveredA || fighterA || roster[0])?.animations.idle}
           animate={{
@@ -111,15 +111,19 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
                 ? "brightness(1) drop-shadow(0 0 30px rgba(60,130,255,0.5))"
                 : "brightness(0)",
             x: hoveredA || fighterA ? 20 : -50,
+            y:
+              (hoveredA || fighterA || roster[0])?.id === "economist"
+                ? "8%"
+                : "0%",
           }}
           transition={{ type: "spring", stiffness: 100 }}
-          className="h-full object-cover pixelated"
+          className="h-full w-auto max-w-none object-contain object-bottom pixelated origin-bottom"
           style={{ imageRendering: "pixelated" }}
         />
       </div>
 
       {/* Player 2 Silhouette (Right) */}
-      <div className="absolute right-0 bottom-0 h-[80vh] w-1/3 pointer-events-none z-0 flex items-end justify-end opacity-40">
+      <div className="absolute right-0 bottom-0 h-[80vh] w-1/2 pointer-events-none z-0 flex items-end justify-end opacity-40 overflow-visible">
         <motion.img
           src={(hoveredB || fighterB || roster[1])?.animations.idle}
           animate={{
@@ -128,10 +132,14 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
                 ? "brightness(1) drop-shadow(0 0 30px rgba(255,60,60,0.5))"
                 : "brightness(0)",
             x: hoveredB || fighterB ? -20 : 50,
+            y:
+              (hoveredB || fighterB || roster[1])?.id === "economist"
+                ? "8%"
+                : "0%",
             scaleX: -1,
           }}
           transition={{ type: "spring", stiffness: 100 }}
-          className="h-full object-cover pixelated"
+          className="h-full w-auto max-w-none object-contain object-bottom pixelated origin-bottom"
           style={{ imageRendering: "pixelated" }}
         />
       </div>

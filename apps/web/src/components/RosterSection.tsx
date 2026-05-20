@@ -1,4 +1,3 @@
-import Image from "next/image";
 import type { FighterDef } from "@/types/fighter";
 
 async function getRoster(): Promise<FighterDef[]> {
@@ -67,6 +66,15 @@ export async function RosterSection() {
               fighter.animations?.idle ??
               `/sprites/${spriteFolder}/${spriteFolder}_Idle.gif`;
 
+            const isEconomist = fighter.id === "economist";
+            const isDoomer = fighter.id === "doomer";
+            const topOffset = isEconomist ? "-35%" : "-65%";
+            const horizontalOffset = isDoomer
+              ? "-2.0%"
+              : isEconomist
+                ? "2.5%"
+                : "3.0%";
+
             return (
               <div
                 key={fighter.id}
@@ -74,15 +82,19 @@ export async function RosterSection() {
               >
                 {/* Header: Avatar & Name */}
                 <div className="flex items-center gap-6">
-                  <div className="w-24 h-24 bg-gray-900 border-2 border-gray-700 flex items-center justify-center overflow-hidden shrink-0">
-                    <Image
+                  <div className="w-24 h-24 bg-gray-900 border-2 border-gray-700 relative overflow-hidden shrink-0">
+                    {/* biome-ignore lint/performance/noImgElement: native img required for unconstrained proportional rendering */}
+                    <img
                       src={idleHeadshot}
                       alt={`${fighter.name} idle headshot`}
-                      width={96}
-                      height={96}
-                      unoptimized
-                      className="w-full h-full object-cover object-top scale-125 pixelated"
-                      style={{ imageRendering: "pixelated" }}
+                      className="absolute left-1/2 -translate-x-1/2 max-w-none object-contain pixelated"
+                      style={{
+                        imageRendering: "pixelated",
+                        height: "400%",
+                        top: topOffset,
+                        width: "auto",
+                        transform: `translateX(${horizontalOffset})`,
+                      }}
                     />
                   </div>
                   <div>
