@@ -212,8 +212,7 @@ export function CombatScreen({
             }}
             className="absolute inset-[-10%] w-[120%] h-[120%] -z-10 pointer-events-none"
             style={{
-              backgroundImage:
-                'url("https://placehold.co/1920x1080/000/FFF?text=TOP+DOWN+COLOSSEUM")',
+              backgroundImage: 'url("/arena/Arena.png")',
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
