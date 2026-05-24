@@ -177,7 +177,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             maxLength={100}
-            className="w-full bg-transparent text-2xl font-sans text-white focus:outline-none px-2 placeholder-gray-700"
+            className="w-full bg-transparent text-2xl font-sans text-white focus:outline-none px-2 placeholder:text-white/70"
             placeholder="Is remote work destroying human culture?"
           />
         </div>

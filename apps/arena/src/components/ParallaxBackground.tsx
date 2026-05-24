@@ -11,6 +11,9 @@ export function ParallaxBackground({
   isBSpeaking = false,
   isAttack = false,
 }: ParallaxBackgroundProps) {
+  const crowdMask =
+    "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.06) 14%, rgba(0,0,0,0.18) 24%, rgba(0,0,0,0.34) 34%, rgba(0,0,0,0.5) 46%, rgba(0,0,0,0.62) 60%, rgba(0,0,0,0.72) 74%, rgba(0,0,0,0.78) 100%)";
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 bg-gray-950">
       {/* Layer 1: Deep Background (Sky/Architecture) */}
@@ -20,7 +23,7 @@ export function ParallaxBackground({
           y: "6%",
         }}
         transition={{ type: "spring", stiffness: 20, damping: 30 }}
-        className="absolute inset-[-10%] w-[120%] h-full bg-gray-900 opacity-80"
+        className="absolute inset-[-10%] w-[120%] h-full"
         style={{
           backgroundImage: 'url("/arena/Sky.png")',
           backgroundSize: "cover",
@@ -35,7 +38,7 @@ export function ParallaxBackground({
           y: "8%",
         }}
         transition={{ type: "spring", stiffness: 30, damping: 25 }}
-        className="absolute inset-[-10%] w-[120%] h-full opacity-60"
+        className="absolute inset-[-10%] w-[120%] h-full"
       >
         <div
           className="w-full h-full"
@@ -43,6 +46,12 @@ export function ParallaxBackground({
             backgroundImage: 'url("/arena/Backdrop.png")',
             backgroundSize: "cover",
             backgroundPosition: "center 55%",
+            WebkitMaskImage: crowdMask,
+            WebkitMaskRepeat: "no-repeat",
+            WebkitMaskSize: "100% 100%",
+            maskImage: crowdMask,
+            maskRepeat: "no-repeat",
+            maskSize: "100% 100%",
           }}
         />
       </motion.div>
@@ -54,7 +63,7 @@ export function ParallaxBackground({
           y: "4%",
         }}
         transition={{ type: "spring", stiffness: 40, damping: 20 }}
-        className="absolute bottom-0 left-[-20%] w-[140%] h-[30vh] border-t-4 border-gray-800 bg-gray-950 overflow-hidden"
+        className="absolute bottom-0 left-[-20%] w-[140%] h-[33vh] border-t-4 border-gray-800 bg-gray-950 overflow-hidden"
       >
         <img
           src="/arena/Arena.png"
