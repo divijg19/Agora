@@ -303,7 +303,7 @@ export function CombatScreen({
           <div className="absolute top-0 left-0 right-0 h-1/3 bg-white/20 z-10 pointer-events-none" />
         </div>
 
-        <div className="grid grid-cols-[28px_1fr] items-center gap-0.5">
+        <div className="grid grid-cols-[28px_1fr] items-center gap-0.5 pl-4">
           <motion.div
             className="w-7 h-7 rounded-full border border-white/10 shadow-inner overflow-hidden relative"
             animate={{ scale: orbPulseA ? 1.12 : 1 }}
@@ -382,7 +382,7 @@ export function CombatScreen({
           <div className="absolute top-0 left-0 right-0 h-1/3 bg-white/20 z-10 pointer-events-none" />
         </div>
 
-        <div className="grid grid-cols-[1fr_28px] items-center gap-0.5 justify-end">
+        <div className="grid grid-cols-[1fr_28px] items-center gap-0.5 justify-end pr-4">
           <div className="flex justify-end">
             <div
               className={`inline-flex items-center self-end border-2 bg-black px-3 py-1.5 text-base font-black uppercase tracking-[0.12em] leading-none text-white transition-colors ${fighterBBorderClass}`}
