@@ -220,6 +220,69 @@ export function CombatScreen({
         )}
       </AnimatePresence>
 
+      {/* Cinematic Health Bars (Top Corners) */}
+      <div className="absolute top-6 left-6 z-60 w-72 pointer-events-none">
+        <div className="mb-2 text-xs text-gray-400 uppercase tracking-widest">
+          Player
+        </div>
+        <div className="w-full h-6 bg-black border-4 border-arena-border p-0.5 relative shadow-lg overflow-hidden rounded-md">
+          {/* Slow catch-up (damage indicator) */}
+          <motion.div
+            initial={{ width: "100%" }}
+            animate={{ width: `${hpA}%` }}
+            transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+            className="absolute left-0 top-0 bottom-0 bg-yellow-400"
+          />
+
+          {/* Fast foreground (actual HP) */}
+          <motion.div
+            initial={{ width: "100%" }}
+            animate={{ width: `${hpA}%` }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className={`absolute left-0 top-0 bottom-0 ${fighterA.color} shadow-[inset_0_-4px_rgba(0,0,0,0.3)]`}
+          />
+
+          {/* Glass glare overlay */}
+          <div className="absolute top-0 left-0 right-0 h-1/3 bg-white/20 z-10 pointer-events-none" />
+        </div>
+
+        <div className="mt-2 text-left">
+          <div className="text-sm font-black uppercase text-white">{fighterA.name}</div>
+          <div className={`h-1 mt-1 rounded-sm ${fighterA.color} opacity-80`} />
+        </div>
+      </div>
+
+      <div className="absolute top-6 right-6 z-60 w-72 pointer-events-none text-right">
+        <div className="mb-2 text-xs text-gray-400 uppercase tracking-widest">
+          Player
+        </div>
+        <div className="w-full h-6 bg-black border-4 border-arena-border p-0.5 relative shadow-lg overflow-hidden rounded-md">
+          {/* Slow catch-up (damage indicator) */}
+          <motion.div
+            initial={{ width: "100%" }}
+            animate={{ width: `${hpB}%` }}
+            transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+            className="absolute left-0 top-0 bottom-0 bg-yellow-400"
+          />
+
+          {/* Fast foreground (actual HP) */}
+          <motion.div
+            initial={{ width: "100%" }}
+            animate={{ width: `${hpB}%` }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className={`absolute left-0 top-0 bottom-0 ${fighterB.color} shadow-[inset_0_-4px_rgba(0,0,0,0.3)]`}
+          />
+
+          {/* Glass glare overlay */}
+          <div className="absolute top-0 left-0 right-0 h-1/3 bg-white/20 z-10 pointer-events-none" />
+        </div>
+
+        <div className="mt-2 text-right">
+          <div className="text-sm font-black uppercase text-white">{fighterB.name}</div>
+          <div className={`h-1 mt-1 rounded-sm ${fighterB.color} opacity-80 ml-auto`} />
+        </div>
+      </div>
+
       {/* Header Topic & Turn Indicator */}
       <AnimatePresence>
         {!isIntroPlaying && (
