@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { fetchRoster, startMatch } from "../lib/api";
 import type { FighterDef } from "../types/fighter";
-import { ParallaxBackground } from "./ParallaxBackground";
+import { SetupParallaxBackground } from "./SetupParallaxBackground";
 
 interface SetupScreenProps {
   onMatchStarted: (
@@ -98,7 +98,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
       exit={{ opacity: 0 }}
       className="w-full h-screen relative z-10 flex flex-col items-center justify-center overflow-hidden"
     >
-      <ParallaxBackground />
+      <SetupParallaxBackground />
 
       {/* GIANT SILHOUETTES (Background Layer) */}
       {/* Player 1 Silhouette (Left) */}

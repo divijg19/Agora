@@ -1,16 +1,16 @@
 import { motion } from "framer-motion";
 
-interface ParallaxBackgroundProps {
+interface SetupParallaxBackgroundProps {
   isASpeaking?: boolean;
   isBSpeaking?: boolean;
   isAttack?: boolean;
 }
 
-export function ParallaxBackground({
+export function SetupParallaxBackground({
   isASpeaking = false,
   isBSpeaking = false,
   isAttack = false,
-}: ParallaxBackgroundProps) {
+}: SetupParallaxBackgroundProps) {
   const crowdMask = "linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.72))";
 
   return (
