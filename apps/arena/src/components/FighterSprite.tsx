@@ -111,8 +111,6 @@ export function FighterSprite({
     };
     spriteTransition = { duration: 0.5 };
   }
-  // Map the tailwind bg classes to border colors for the portrait frame
-  const borderColorClass = fighter.color.replace("bg-", "border-");
   const yOffset = fighter.id === "economist" ? "4%" : "0%";
 
   // Health bars moved to CombatScreen (top corners)
@@ -172,17 +170,6 @@ export function FighterSprite({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Name Tag */}
-      <div
-        className={`mt-4 px-3 py-1 border-2 bg-black tracking-widest uppercase font-bold text-xl transition-colors ${
-          isActive
-            ? `${borderColorClass} text-white`
-            : "border-arena-border text-gray-600"
-        }`}
-      >
-        {fighter.name}
-      </div>
     </motion.div>
   );
 }
