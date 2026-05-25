@@ -175,7 +175,7 @@ export function CombatScreen({
             ? { duration: 0.4 }
             : { duration: 0.5 }
       }
-      className="max-w-6xl w-full mx-auto p-4 flex flex-col h-[85vh] relative z-10"
+      className="w-full mx-auto p-4 flex flex-col h-[95vh] relative z-10"
     >
       {/* --- CAMERA SYSTEM --- */}
       <AnimatePresence mode="wait">
@@ -212,8 +212,8 @@ export function CombatScreen({
             }}
             className="absolute inset-[-10%] w-[120%] h-[120%] -z-10 pointer-events-none"
             style={{
-              backgroundImage: 'url("/arena/Arena.png")',
-              backgroundSize: "cover",
+              backgroundImage: 'url("/arena/Arena_Full.png")',
+              backgroundSize: "100%",
               backgroundPosition: "center",
             }}
           />
@@ -254,17 +254,19 @@ export function CombatScreen({
               modalOpen ? "opacity-60 blur-[1px]" : "opacity-100"
             }`}
           >
-            <FighterSprite
-              fighter={fighterA}
-              isActive={isASpeaking}
-              facing="right"
-              hp={hpA}
-              currentIntent={currentIntent}
-              isIntroPlaying={isIntroPlaying}
-              isBeingAttacked={isBSpeaking && isAttack}
-              verdict={verdict}
-              userVote={userVote}
-            />
+            <div className="translate-y-48">
+              <FighterSprite
+                fighter={fighterA}
+                isActive={isASpeaking}
+                facing="right"
+                hp={hpA}
+                currentIntent={currentIntent}
+                isIntroPlaying={isIntroPlaying}
+                isBeingAttacked={isBSpeaking && isAttack}
+                verdict={verdict}
+                userVote={userVote}
+              />
+            </div>
 
             {/* Dialogue for the Left */}
             {!isIntroPlaying && !isComplete && isASpeaking && (
@@ -378,17 +380,19 @@ export function CombatScreen({
               )}
             </div>
 
-            <FighterSprite
-              fighter={fighterB}
-              isActive={isBSpeaking}
-              facing="left"
-              hp={hpB}
-              currentIntent={currentIntent}
-              isIntroPlaying={isIntroPlaying}
-              isBeingAttacked={isASpeaking && isAttack}
-              verdict={verdict}
-              userVote={userVote}
-            />
+            <div className="translate-y-48">
+              <FighterSprite
+                fighter={fighterB}
+                isActive={isBSpeaking}
+                facing="left"
+                hp={hpB}
+                currentIntent={currentIntent}
+                isIntroPlaying={isIntroPlaying}
+                isBeingAttacked={isASpeaking && isAttack}
+                verdict={verdict}
+                userVote={userVote}
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
