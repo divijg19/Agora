@@ -2,9 +2,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useEngineStream } from "../hooks/useEngineStream";
 import type { FighterDef } from "../types/fighter";
+import { CombatParallaxBackground } from "./CombatParallaxBackground";
 import { DialogueBox } from "./DialogueBox";
 import { FighterSprite } from "./FighterSprite";
-import { ParallaxBackground } from "./ParallaxBackground";
 
 interface CombatScreenProps {
   matchId: string;
@@ -187,7 +187,7 @@ export function CombatScreen({
             exit={{ opacity: 0 }}
             className="absolute inset-0 pointer-events-none"
           >
-            <ParallaxBackground
+            <CombatParallaxBackground
               isASpeaking={isASpeaking}
               isBSpeaking={isBSpeaking}
               isAttack={isAttack}
