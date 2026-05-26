@@ -22,6 +22,35 @@ const CHEVRON_DOUBLE_INTENTS = new Set([
   "special",
 ]);
 
+const AGGRESSIVE_INTENTS = new Set(["attack", "counter", "objection"]);
+
+const ORB_FLAME_TONGUES = [
+  {
+    id: "north-west",
+    className: "left-[12%] top-[16%] h-[42%] w-[12%] rotate-[-22deg]",
+    delay: "0s",
+    duration: "1.8s",
+  },
+  {
+    id: "north",
+    className: "left-[34%] top-[6%] h-[58%] w-[14%] rotate-[-8deg]",
+    delay: "0.16s",
+    duration: "1.55s",
+  },
+  {
+    id: "south",
+    className: "right-[34%] top-[6%] h-[58%] w-[14%] rotate-[8deg]",
+    delay: "0.28s",
+    duration: "1.55s",
+  },
+  {
+    id: "north-east",
+    className: "right-[12%] top-[16%] h-[42%] w-[12%] rotate-[22deg]",
+    delay: "0.42s",
+    duration: "1.8s",
+  },
+];
+
 export function CombatScreen({
   matchId,
   topic,
@@ -165,11 +194,12 @@ export function CombatScreen({
 
   const intentFillPercent = useCallback((intent: string | null) => {
     if (!intent) return 0;
-    if (intent === "attack") return 10;
     if (intent === "special" || intent === "counter" || intent === "rebuttal")
       return 30;
     return 0;
   }, []);
+
+  const baseTurnCharge = 10;
 
   // orbA/orbB instantaneous values removed; using persistent `orbChargeA/B` instead
 
@@ -178,9 +208,98 @@ export function CombatScreen({
   const [orbChargeB, setOrbChargeB] = useState(0);
   const [orbPulseA, setOrbPulseA] = useState(false);
   const [orbPulseB, setOrbPulseB] = useState(false);
+  const orbChargeRatioA = orbChargeA / 100;
+  const orbChargeRatioB = orbChargeB / 100;
+
+  // Color interpolation helper: blue (210deg) -> orange (28deg)
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  const lerpColor = (
+    c1: [number, number, number],
+    c2: [number, number, number],
+    t: number,
+  ) => {
+    const r = Math.round(lerp(c1[0], c2[0], t));
+    const g = Math.round(lerp(c1[1], c2[1], t));
+    const b = Math.round(lerp(c1[2], c2[2], t));
+    return [r, g, b] as [number, number, number];
+  };
+
+  const rgba = (rgb: [number, number, number], a = 1) =>
+    `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
+
+  // Only use blue and orange palettes (and white). Each palette has matching stops.
+  const BLUE_STOPS: [number, number, number][] = [
+    [191, 219, 254],
+    [96, 165, 250],
+    [59, 130, 246],
+    [37, 99, 235],
+  ];
+  const ORANGE_STOPS: [number, number, number][] = [
+    [255, 236, 209],
+    [255, 179, 92],
+    [255, 125, 50],
+    [200, 70, 20],
+  ];
+
+  const colorsForCharge = (charge: number) => {
+    // Blue until 70% (no orange influence), then interpolate to orange between 70-99%,
+    // white-hot at 100% (core white, flames orange).
+    const clamped = Math.max(0, Math.min(100, charge));
+    const whiteHot = clamped >= 100;
+
+    let s0: [number, number, number];
+    let s1: [number, number, number];
+    let s2: [number, number, number];
+    let s3: [number, number, number];
+
+    if (whiteHot) {
+      // full orange palette for flames, but core will be white
+      s0 = ORANGE_STOPS[0];
+      s1 = ORANGE_STOPS[1];
+      s2 = ORANGE_STOPS[2];
+      s3 = ORANGE_STOPS[3];
+    } else if (clamped <= 70) {
+      // pure blue palette
+      s0 = BLUE_STOPS[0];
+      s1 = BLUE_STOPS[1];
+      s2 = BLUE_STOPS[2];
+      s3 = BLUE_STOPS[3];
+    } else {
+      // interpolate from blue -> orange over 70..100
+      const t = (clamped - 70) / 30;
+      s0 = lerpColor(BLUE_STOPS[0], ORANGE_STOPS[0], t);
+      s1 = lerpColor(BLUE_STOPS[1], ORANGE_STOPS[1], t);
+      s2 = lerpColor(BLUE_STOPS[2], ORANGE_STOPS[2], t);
+      s3 = lerpColor(BLUE_STOPS[3], ORANGE_STOPS[3], t);
+    }
+
+    // Core: white-hot at 100% centers, otherwise blended stops (center slightly lighter)
+    const coreCenter: [number, number, number] = whiteHot
+      ? [255, 255, 255]
+      : [255, 255, 255];
+    const coreGradient = `radial-gradient(circle at 50% 45%, ${rgba(coreCenter, whiteHot ? 1 : 0.95)} 0%, ${rgba(s0, 0.95)} 12%, ${rgba(s1, 0.78)} 32%, ${rgba(s2, 0.28)} 58%, transparent 76%)`;
+
+    // Corona should reflect the flame palette (orange when hot)
+    const coronaGradient = `conic-gradient(from 0deg, ${rgba(s1, 0)} 0deg, ${rgba(s0, 0.55)} 45deg, ${rgba([255, 255, 255], 0.95)} 80deg, ${rgba(s1, 0.12)} 120deg, ${rgba(s2, 0.55)} 200deg, ${rgba([255, 255, 255], 0.85)} 260deg, ${rgba(s1, 0)} 360deg)`;
+
+    // Tongues and fill use same palette
+    const tongueGradient = `linear-gradient(to top, ${rgba([255, 255, 255], 0.95)} 0%, ${rgba(s0, 0.85)} 18%, ${rgba(s1, 0.5)} 42%, transparent 100%)`;
+    const fillGradient = `linear-gradient(180deg, ${rgba(s0, 0.98)} 0%, ${rgba(s1, 0.95)} 24%, ${rgba(s2, 0.9)} 64%, ${rgba(s3, 0.98)} 100%)`;
+
+    return {
+      coreGradient,
+      coronaGradient,
+      tongueGradient,
+      fillGradient,
+      whiteHot,
+    };
+  };
+
+  const orbColorsA = colorsForCharge(orbChargeA);
+  const orbColorsB = colorsForCharge(orbChargeB);
 
   useEffect(() => {
-    const amount = intentFillPercent(activeIntentVisual);
+    const amount = baseTurnCharge + intentFillPercent(activeIntentVisual);
     if (isASpeaking && amount > 0) {
       setOrbChargeA((prev) => {
         const next = Math.min(100, prev + amount);
@@ -202,6 +321,30 @@ export function CombatScreen({
         return next;
       });
     }
+
+    if (activeIntentVisual && AGGRESSIVE_INTENTS.has(activeIntentVisual)) {
+      if (isASpeaking) {
+        setOrbChargeB((prev) => {
+          const next = Math.min(100, prev + 10);
+          if (next > prev) {
+            setOrbPulseB(true);
+            setTimeout(() => setOrbPulseB(false), 350);
+          }
+          return next;
+        });
+      }
+
+      if (isBSpeaking) {
+        setOrbChargeA((prev) => {
+          const next = Math.min(100, prev + 10);
+          if (next > prev) {
+            setOrbPulseA(true);
+            setTimeout(() => setOrbPulseA(false), 350);
+          }
+          return next;
+        });
+      }
+    }
     // run when intent or speaker changes
   }, [activeIntentVisual, isASpeaking, isBSpeaking, intentFillPercent]);
 
@@ -211,6 +354,18 @@ export function CombatScreen({
     if (isComplete && !userVote) {
       const timer = setTimeout(() => setShowVotePrompt(true), 2000);
       return () => clearTimeout(timer);
+    }
+  }, [isComplete, userVote]);
+
+  // Reset orbs when verdict is confirmed
+  useEffect(() => {
+    if (isComplete && userVote) {
+      // Brief delay to let discharge animation play before reset
+      const resetTimer = setTimeout(() => {
+        setOrbChargeA(0);
+        setOrbChargeB(0);
+      }, 300);
+      return () => clearTimeout(resetTimer);
     }
   }, [isComplete, userVote]);
 
@@ -303,7 +458,7 @@ export function CombatScreen({
           <div className="absolute top-0 left-0 right-0 h-1/3 bg-white/20 z-10 pointer-events-none" />
         </div>
 
-        <div className="grid grid-cols-[28px_1fr] items-center gap-0.5 pl-4">
+        <div className="grid grid-cols-[28px_1fr] items-center gap-3 pl-4">
           <motion.div
             className="w-7 h-7 rounded-full border border-white/10 shadow-inner overflow-hidden relative"
             animate={{ scale: orbPulseA ? 1.12 : 1 }}
@@ -317,31 +472,126 @@ export function CombatScreen({
           >
             <div className="absolute inset-0 rounded-full bg-[#081224]" />
 
+            {/* Plasma core and heat bloom */}
             <motion.div
-              className="absolute left-1/2 bottom-[6%] -translate-x-1/2 rounded-full pointer-events-none"
+              className="absolute inset-[8%] rounded-full pointer-events-none"
               style={{
-                width: "140%",
-                height: "140%",
-                filter: "blur(5px)",
-                background:
-                  "radial-gradient(circle at 50% 70%, rgba(96,165,250,1), rgba(59,130,246,0.8), transparent)",
+                background: orbColorsA.coreGradient,
+                filter: "blur(1.5px)",
+                mixBlendMode: "screen",
               }}
               animate={{
-                scale: 0.6 + orbChargeA / 200,
-                opacity: 0.2 + Math.min(0.8, orbChargeA / 50),
+                scale: 0.78 + orbChargeRatioA * 0.2,
+                opacity: 0.15 + Math.min(0.85, orbChargeRatioA),
               }}
-              transition={{ duration: 0.45, ease: "easeOut" }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
             />
 
+            <motion.div
+              className="absolute inset-[14%] rounded-full pointer-events-none"
+              style={{
+                background: orbColorsA.coreGradient,
+                filter: "blur(2px)",
+                mixBlendMode: "screen",
+              }}
+              animate={{
+                opacity: Math.max(0, Math.min(0.9, orbChargeRatioA * 1.1)),
+                scale: 0.9 + orbChargeRatioA * 0.15,
+              }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            />
+
+            {/* Outer plasma corona */}
+            <motion.div
+              className="absolute inset-[-10%] rounded-full pointer-events-none"
+              animate={{
+                opacity: orbChargeA > 12 ? 0.18 + orbChargeRatioA * 0.75 : 0,
+                scale: orbChargeA > 12 ? 0.96 + orbChargeRatioA * 0.14 : 0.92,
+              }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+              style={{
+                animation:
+                  orbChargeA > 12
+                    ? `plasma-orbit ${7 - orbChargeA / 28}s linear infinite`
+                    : "none",
+                background: orbColorsA.coronaGradient,
+                filter: "blur(2.5px)",
+                transformOrigin: "50% 50%",
+              }}
+            >
+              <div className="absolute inset-[18%] rounded-full border border-white/30 shadow-[0_0_8px_rgba(191,219,254,0.6)]" />
+            </motion.div>
+
+            {/* Edge plasma tongues */}
+            {orbChargeA > 20 && (
+              <div className="absolute inset-0 pointer-events-none">
+                {ORB_FLAME_TONGUES.map((tongue) => (
+                  <motion.div
+                    key={tongue.id}
+                    className={`absolute rounded-full ${tongue.className}`}
+                    style={{
+                      background: orbColorsA.tongueGradient,
+                      filter: "blur(0.5px)",
+                      transformOrigin: "50% 100%",
+                      transform: `scale(${0.8 + orbChargeRatioA * (orbChargeA >= 70 ? 1.8 : 1.2)})`,
+                      animation: `plasma-flicker ${tongue.duration} ease-in-out infinite ${tongue.delay}, plasma-rise ${Math.max(1.15, 2.1 - orbChargeRatioA * 0.95)}s ease-in-out infinite ${tongue.delay}`,
+                      opacity: Math.min(
+                        1,
+                        0.15 +
+                          orbChargeRatioA * (orbChargeA >= 70 ? 1.15 : 0.95),
+                      ),
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {orbChargeA > 50 && (
+              <motion.div
+                className="absolute inset-[28%] rounded-full pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.9) 0%, rgba(191,219,254,0.55) 30%, transparent 68%)",
+                  filter: "blur(1px)",
+                  mixBlendMode: "screen",
+                }}
+                animate={{
+                  opacity: 0.35 + Math.min(0.65, orbChargeRatioA),
+                  scale: 0.9 + orbChargeRatioA * 0.1,
+                }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              />
+            )}
+
+            {/* Blue core fill */}
             <motion.div
               className="absolute left-0 right-0 bottom-0 rounded-b-full"
               animate={{ height: `${orbChargeA}%` }}
               transition={{ type: "spring", stiffness: 220, damping: 26 }}
               style={{
-                background: "linear-gradient(180deg,#60a5fa,#2563eb)",
+                background: orbColorsA.fillGradient,
               }}
             />
 
+            {orbChargeA > 75 && (
+              <motion.div
+                className="absolute inset-[18%] rounded-full pointer-events-none"
+                style={{
+                  background: orbColorsA.whiteHot
+                    ? "radial-gradient(circle at 50% 42%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.85) 12%, rgba(255,255,255,0.4) 22%, transparent 72%)"
+                    : `radial-gradient(circle at 50% 42%, rgba(255,255,255,0.98) 0%, hsla(${Math.round(lerp(210, 28, orbChargeRatioA))},85%,80%,0.65) 18%, hsla(${Math.round(lerp(210, 28, orbChargeRatioA))},80%,60%,0.28) 35%, transparent 72%)`,
+                  mixBlendMode: "screen",
+                  filter: "blur(0.75px)",
+                }}
+                animate={{
+                  opacity: 0.7 + Math.min(0.3, orbChargeRatioA),
+                  scale: 1.0 + orbChargeRatioA * 0.08,
+                }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              />
+            )}
+
+            {/* Inner Shine Overlay */}
             <div className="absolute inset-0 rounded-full bg-white/6 pointer-events-none" />
           </motion.div>
 
@@ -382,7 +632,7 @@ export function CombatScreen({
           <div className="absolute top-0 left-0 right-0 h-1/3 bg-white/20 z-10 pointer-events-none" />
         </div>
 
-        <div className="grid grid-cols-[1fr_28px] items-center gap-0.5 justify-end pr-4">
+        <div className="grid grid-cols-[1fr_28px] items-center gap-3 justify-end pr-4">
           <div className="flex justify-end">
             <div
               className={`inline-flex items-center self-end border-2 bg-black px-3 py-1.5 text-base font-black uppercase tracking-[0.12em] leading-none text-white transition-colors ${fighterBBorderClass}`}
@@ -409,31 +659,123 @@ export function CombatScreen({
           >
             <div className="absolute inset-0 rounded-full bg-[#081224]" />
 
+            {/* Enhanced Glow Layer - Multiple concentric gradients */}
             <motion.div
-              className="absolute left-1/2 bottom-[6%] -translate-x-1/2 rounded-full pointer-events-none"
+              className="absolute inset-[8%] rounded-full pointer-events-none"
               style={{
-                width: "140%",
-                height: "140%",
-                filter: "blur(5px)",
-                background:
-                  "radial-gradient(circle at 50% 70%, rgba(96,165,250,1), rgba(59,130,246,0.8), transparent)",
+                background: orbColorsB.coreGradient,
+                filter: "blur(1.5px)",
+                mixBlendMode: "screen",
               }}
               animate={{
-                scale: 0.6 + orbChargeB / 200,
-                opacity: 0.2 + Math.min(0.8, orbChargeB / 50),
+                scale: 0.78 + orbChargeRatioB * 0.2,
+                opacity: 0.15 + Math.min(0.85, orbChargeRatioB),
+              }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            />
+
+            <motion.div
+              className="absolute inset-[14%] rounded-full pointer-events-none"
+              style={{
+                background: orbColorsB.coreGradient,
+                filter: "blur(2px)",
+                mixBlendMode: "screen",
+              }}
+              animate={{
+                opacity: Math.max(0, Math.min(0.9, orbChargeRatioB * 1.1)),
+                scale: 0.9 + orbChargeRatioB * 0.15,
+              }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            />
+
+            <motion.div
+              className="absolute inset-[-10%] rounded-full pointer-events-none"
+              animate={{
+                opacity: orbChargeB > 12 ? 0.18 + orbChargeRatioB * 0.75 : 0,
+                scale: orbChargeB > 12 ? 0.96 + orbChargeRatioB * 0.14 : 0.92,
               }}
               transition={{ duration: 0.45, ease: "easeOut" }}
-            />
+              style={{
+                animation:
+                  orbChargeB > 12
+                    ? `plasma-orbit ${7 - orbChargeB / 28}s linear infinite`
+                    : "none",
+                background: orbColorsB.coronaGradient,
+                filter: "blur(2.5px)",
+                transformOrigin: "50% 50%",
+              }}
+            >
+              <div className="absolute inset-[18%] rounded-full border border-white/30 shadow-[0_0_8px_rgba(191,219,254,0.6)]" />
+            </motion.div>
+
+            {orbChargeB > 20 && (
+              <div className="absolute inset-0 pointer-events-none">
+                {ORB_FLAME_TONGUES.map((tongue) => (
+                  <motion.div
+                    key={tongue.id}
+                    className={`absolute rounded-full ${tongue.className}`}
+                    style={{
+                      background: orbColorsB.tongueGradient,
+                      filter: "blur(0.5px)",
+                      transformOrigin: "50% 100%",
+                      transform: `scale(${0.8 + orbChargeRatioB * (orbChargeB >= 70 ? 1.8 : 1.2)})`,
+                      animation: `plasma-flicker ${tongue.duration} ease-in-out infinite ${tongue.delay}, plasma-rise ${Math.max(1.15, 2.1 - orbChargeRatioB * 0.95)}s ease-in-out infinite ${tongue.delay}`,
+                      opacity: Math.min(
+                        1,
+                        0.15 +
+                          orbChargeRatioB * (orbChargeB >= 70 ? 1.15 : 0.95),
+                      ),
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {orbChargeB > 50 && (
+              <motion.div
+                className="absolute inset-[28%] rounded-full pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.9) 0%, rgba(191,219,254,0.55) 30%, transparent 68%)",
+                  filter: "blur(1px)",
+                  mixBlendMode: "screen",
+                }}
+                animate={{
+                  opacity: 0.35 + Math.min(0.65, orbChargeRatioB),
+                  scale: 0.9 + orbChargeRatioB * 0.1,
+                }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              />
+            )}
 
             <motion.div
               className="absolute left-0 right-0 bottom-0 rounded-b-full"
               animate={{ height: `${orbChargeB}%` }}
               transition={{ type: "spring", stiffness: 220, damping: 26 }}
               style={{
-                background: "linear-gradient(180deg,#60a5fa,#2563eb)",
+                background: orbColorsB.fillGradient,
               }}
             />
 
+            {orbChargeB > 75 && (
+              <motion.div
+                className="absolute inset-[18%] rounded-full pointer-events-none"
+                style={{
+                  background: orbColorsB.whiteHot
+                    ? "radial-gradient(circle at 50% 42%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.85) 12%, rgba(255,255,255,0.4) 22%, transparent 72%)"
+                    : `radial-gradient(circle at 50% 42%, rgba(255,255,255,0.98) 0%, hsla(${Math.round(lerp(210, 28, orbChargeRatioB))},85%,80%,0.65) 18%, hsla(${Math.round(lerp(210, 28, orbChargeRatioB))},80%,60%,0.28) 35%, transparent 72%)`,
+                  mixBlendMode: "screen",
+                  filter: "blur(0.75px)",
+                }}
+                animate={{
+                  opacity: 0.7 + Math.min(0.3, orbChargeRatioB),
+                  scale: 1.0 + orbChargeRatioB * 0.08,
+                }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              />
+            )}
+
+            {/* Inner Shine Overlay */}
             <div className="absolute inset-0 rounded-full bg-white/6 pointer-events-none" />
           </motion.div>
         </div>
