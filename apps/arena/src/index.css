@@ -50,9 +50,11 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: radial-gradient(circle,
-      rgba(0, 0, 0, 0) 50%,
-      rgba(0, 0, 0, 0.6) 100%);
+  background: radial-gradient(
+    circle,
+    rgba(0, 0, 0, 0) 50%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
   pointer-events: none;
   z-index: 9998;
 }
@@ -69,7 +71,6 @@
 }
 
 @keyframes plasma-flicker {
-
   0%,
   100% {
     transform: translateY(0) scaleY(0.9) scaleX(0.9);
@@ -88,7 +89,6 @@
 }
 
 @keyframes plasma-breathe {
-
   0%,
   100% {
     opacity: 0.55;
@@ -114,5 +114,56 @@
   100% {
     transform: translateY(-120%) scale(1.05);
     opacity: 0;
+  }
+}
+
+@keyframes orb-firebody-rise {
+  0% {
+    transform: translate(-50%, 4%) scaleX(0.94) scaleY(0.9);
+    opacity: 0.24;
+  }
+
+  45% {
+    transform: translate(-50%, -3%) scaleX(1.02) scaleY(1.04);
+    opacity: 0.98;
+  }
+
+  100% {
+    transform: translate(-50%, -5%) scaleX(0.98) scaleY(1.08);
+    opacity: 0.52;
+  }
+}
+
+@keyframes orb-corona-rise {
+  0% {
+    transform: translateY(8%) scaleY(0.84) scaleX(0.96);
+    opacity: 0.22;
+  }
+
+  50% {
+    transform: translateY(-2%) scaleY(1.0) scaleX(1.02);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-4%) scaleY(1.06) scaleX(0.99);
+    opacity: 0.7;
+  }
+}
+
+@keyframes orb-rim-dance {
+  0% {
+    transform: translateY(4%) scaleY(0.9) scaleX(0.94);
+    opacity: 0.45;
+  }
+
+  40% {
+    transform: translateY(-2px) scaleY(1.04) scaleX(1.02);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-2%) scaleY(1.0) scaleX(0.99);
+    opacity: 0.72;
   }
 }
