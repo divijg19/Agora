@@ -517,7 +517,11 @@ export function CombatScreen({
                   ],
                   y: [0, -2, -1],
                 }}
-                transition={{ duration: orbMotionA, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: orbMotionA,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               />
             )}
 
@@ -537,7 +541,11 @@ export function CombatScreen({
                   ],
                   y: [4, 0, -2],
                 }}
-                transition={{ duration: orbMotionA, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: orbMotionA,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
                 style={{
                   background: orbColorsA.bottomCoronaGradient,
                   backgroundPosition: "center bottom",
@@ -565,9 +573,12 @@ export function CombatScreen({
                         0.14 + orbChargeRatioA * 0.55,
                       ],
                       scale: [
-                        0.7 + orbChargeRatioA * (orbChargeA >= 70 ? 0.36 : 0.24),
-                        0.76 + orbChargeRatioA * (orbChargeA >= 70 ? 0.48 : 0.3),
-                        0.72 + orbChargeRatioA * (orbChargeA >= 70 ? 0.4 : 0.26),
+                        0.7 +
+                          orbChargeRatioA * (orbChargeA >= 70 ? 0.36 : 0.24),
+                        0.76 +
+                          orbChargeRatioA * (orbChargeA >= 70 ? 0.48 : 0.3),
+                        0.72 +
+                          orbChargeRatioA * (orbChargeA >= 70 ? 0.4 : 0.26),
                       ],
                       y: [3, -1, 1],
                       rotate: [-4, 4, -2],
@@ -627,9 +638,7 @@ export function CombatScreen({
                 }}
                 animate={{
                   opacity:
-                    orbChargeA > 45
-                      ? 0.2 + Math.min(0.66, orbChargeRatioA)
-                      : 0,
+                    orbChargeA > 45 ? 0.2 + Math.min(0.66, orbChargeRatioA) : 0,
                   scale: 0.9 + orbChargeRatioA * 0.12,
                 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
@@ -653,9 +662,12 @@ export function CombatScreen({
                           0.2 + orbChargeRatioA * 0.52,
                         ],
                         scale: [
-                          0.6 + orbChargeRatioA * (orbChargeA >= 70 ? 0.42 : 0.28),
-                          0.66 + orbChargeRatioA * (orbChargeA >= 70 ? 0.52 : 0.34),
-                          0.62 + orbChargeRatioA * (orbChargeA >= 70 ? 0.46 : 0.3),
+                          0.6 +
+                            orbChargeRatioA * (orbChargeA >= 70 ? 0.42 : 0.28),
+                          0.66 +
+                            orbChargeRatioA * (orbChargeA >= 70 ? 0.52 : 0.34),
+                          0.62 +
+                            orbChargeRatioA * (orbChargeA >= 70 ? 0.46 : 0.3),
                         ],
                         y: [4, -1, 2],
                         rotate: [-2, 2, 0],
@@ -771,7 +783,11 @@ export function CombatScreen({
                   ],
                   y: [0, -2, -1],
                 }}
-                transition={{ duration: orbMotionB, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: orbMotionB,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               />
             )}
 
@@ -791,7 +807,11 @@ export function CombatScreen({
                   ],
                   y: [4, 0, -2],
                 }}
-                transition={{ duration: orbMotionB, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: orbMotionB,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
                 style={{
                   background: orbColorsB.bottomCoronaGradient,
                   backgroundPosition: "center bottom",
@@ -819,9 +839,12 @@ export function CombatScreen({
                         0.14 + orbChargeRatioB * 0.55,
                       ],
                       scale: [
-                        0.7 + orbChargeRatioB * (orbChargeB >= 70 ? 0.36 : 0.24),
-                        0.76 + orbChargeRatioB * (orbChargeB >= 70 ? 0.48 : 0.3),
-                        0.72 + orbChargeRatioB * (orbChargeB >= 70 ? 0.4 : 0.26),
+                        0.7 +
+                          orbChargeRatioB * (orbChargeB >= 70 ? 0.36 : 0.24),
+                        0.76 +
+                          orbChargeRatioB * (orbChargeB >= 70 ? 0.48 : 0.3),
+                        0.72 +
+                          orbChargeRatioB * (orbChargeB >= 70 ? 0.4 : 0.26),
                       ],
                       y: [3, -1, 1],
                       rotate: [-4, 4, -2],
@@ -881,9 +904,7 @@ export function CombatScreen({
                 }}
                 animate={{
                   opacity:
-                    orbChargeB > 45
-                      ? 0.2 + Math.min(0.66, orbChargeRatioB)
-                      : 0,
+                    orbChargeB > 45 ? 0.2 + Math.min(0.66, orbChargeRatioB) : 0,
                   scale: 0.9 + orbChargeRatioB * 0.12,
                 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
@@ -907,9 +928,12 @@ export function CombatScreen({
                           0.2 + orbChargeRatioB * 0.52,
                         ],
                         scale: [
-                          0.6 + orbChargeRatioB * (orbChargeB >= 70 ? 0.42 : 0.28),
-                          0.66 + orbChargeRatioB * (orbChargeB >= 70 ? 0.52 : 0.34),
-                          0.62 + orbChargeRatioB * (orbChargeB >= 70 ? 0.46 : 0.3),
+                          0.6 +
+                            orbChargeRatioB * (orbChargeB >= 70 ? 0.42 : 0.28),
+                          0.66 +
+                            orbChargeRatioB * (orbChargeB >= 70 ? 0.52 : 0.34),
+                          0.62 +
+                            orbChargeRatioB * (orbChargeB >= 70 ? 0.46 : 0.3),
                         ],
                         y: [4, -1, 2],
                         rotate: [-2, 2, 0],
