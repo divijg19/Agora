@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { Info, Pause } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEngineStream } from "../hooks/useEngineStream";
 import type { FighterDef } from "../types/fighter";
@@ -126,7 +127,10 @@ export function CombatScreen({
   );
   const [isIntroPlaying, setIsIntroPlaying] = useState(true);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const infoPanelRef = useRef<HTMLDivElement>(null);
   const [manualReady, setManualReady] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isInfoHovering, setIsInfoHovering] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsIntroPlaying(false);
@@ -144,11 +148,34 @@ export function CombatScreen({
   }, []);
 
   useEffect(() => {
+    if (isPaused && advanceTimerRef.current) {
+      clearTimeout(advanceTimerRef.current);
+      advanceTimerRef.current = null;
+    }
+  }, [isPaused]);
+
+  useEffect(() => {
     if (!isTyping) {
       setActiveSpeakerVisual(currentSpeaker);
       setActiveIntentVisual(currentIntent);
     }
   }, [currentSpeaker, currentIntent]);
+
+  useEffect(() => {
+    if (!isInfoHovering) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        infoPanelRef.current &&
+        !infoPanelRef.current.contains(e.target as Node)
+      ) {
+        setIsInfoHovering(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isInfoHovering]);
 
   useEffect(() => {
     if (status === "completed") {
@@ -1241,19 +1268,110 @@ export function CombatScreen({
           )}
       </AnimatePresence>
 
-      {/* Bottom-center Debate Mode Toggle */}
+      {/* Bottom-center Info Button with Hover Settings Panel */}
       {!modalOpen && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-60">
-          <div className="bg-black/60 p-3 rounded-md border border-white/10">
-            <ModeToggle
-              value={debateMode}
-              onChange={(m) => {
-                if (typeof onUpdateDebateMode === "function")
-                  onUpdateDebateMode(m);
-              }}
-            />
+          <div
+            ref={infoPanelRef}
+            onMouseEnter={() => setIsInfoHovering(true)}
+            className="relative"
+            role="none"
+          >
+            {/* Info/Pause Button */}
+            <button
+              type="button"
+              onClick={() => setIsPaused(!isPaused)}
+              className="w-12 h-12 bg-black/60 border border-white/10 hover:bg-white/10 rounded-sm text-white font-bold text-xl transition-all flex items-center justify-center"
+              aria-label={isPaused ? "Resume debate" : "Pause debate"}
+            >
+              {isPaused ? <Pause size={24} /> : <Info size={24} />}
+            </button>
+
+            {/* Hover Settings Panel */}
+            {isInfoHovering && !isPaused && (
+              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black/70 p-3 rounded-md border border-white/10 whitespace-nowrap">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <span className="text-xs text-gray-300 uppercase font-mono">
+                    Debate Mode
+                  </span>
+                </div>
+                <ModeToggle
+                  value={debateMode}
+                  onChange={(m) => {
+                    if (typeof onUpdateDebateMode === "function")
+                      onUpdateDebateMode(m);
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
+      )}
+
+      {/* Pause Overlay Menu */}
+      {isPaused && !modalOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 z-70 bg-black/70 flex items-center justify-center backdrop-blur-sm"
+          onClick={() => setIsPaused(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              e.preventDefault();
+              setIsPaused(false);
+            }
+          }}
+          role="alertdialog"
+          aria-modal="true"
+          tabIndex={0}
+        >
+          <div
+            className="bg-gray-900 border-4 border-white/20 p-10 rounded-md flex flex-col items-center gap-6"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-label="Pause menu"
+          >
+            <h2 className="text-4xl text-white font-black uppercase tracking-widest">
+              DEBATE PAUSED
+            </h2>
+
+            <div className="w-full max-w-2xl grid gap-4 sm:grid-cols-[1fr_auto] items-start">
+              <div className="flex flex-col gap-3 w-full sm:min-w-55">
+                <button
+                  type="button"
+                  onClick={() => setIsPaused(false)}
+                  className="px-6 py-3 bg-white text-black font-bold uppercase rounded-sm hover:bg-gray-200 transition-colors"
+                >
+                  RESUME
+                </button>
+                <button
+                  type="button"
+                  onClick={onRestart}
+                  className="px-6 py-3 bg-arena-red/20 border border-arena-red text-arena-red font-bold uppercase rounded-sm hover:bg-arena-red hover:text-white transition-colors"
+                >
+                  RESTART
+                </button>
+              </div>
+
+              <div className="w-full sm:w-55 bg-black/40 border border-white/10 rounded-sm p-3">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <span className="text-xs text-gray-300 uppercase font-mono">
+                    Debate Mode
+                  </span>
+                </div>
+                <ModeToggle
+                  value={debateMode}
+                  onChange={(m) => {
+                    if (typeof onUpdateDebateMode === "function")
+                      onUpdateDebateMode(m);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </motion.div>
       )}
 
       {/* Bottom-right NEXT button for manual mode */}
