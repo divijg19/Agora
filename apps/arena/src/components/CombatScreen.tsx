@@ -1152,7 +1152,7 @@ export function CombatScreen({
 
             {/* Dialogue for the Left */}
             {!isIntroPlaying && !isComplete && isASpeaking && (
-              <div className="absolute left-[8%] top-4 z-70 w-[62%]">
+              <div className="absolute left-[25%] top-[5%] z-70 w-[50%]">
                 <DialogueBox
                   speakerName={fighterA.name}
                   rawText={rawText}
@@ -1165,7 +1165,7 @@ export function CombatScreen({
 
             {/* Dialogue for the Right */}
             {!isIntroPlaying && !isComplete && isBSpeaking && (
-              <div className="absolute right-[8%] top-4 z-70 w-[62%]">
+              <div className="absolute right-[25%] top-[5%] z-70 w-[50%]">
                 <DialogueBox
                   speakerName={fighterB.name}
                   rawText={rawText}

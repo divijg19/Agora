@@ -34,7 +34,11 @@ export function DialogueBox({
         exit={{ opacity: 0, y: -10 }}
         className={`relative border-4 pl-6 pr-6 py-2 bg-black/70 min-h-30 ${
           isJudge ? "border-yellow-500" : "border-arena-border"
-        } ${speakerSide === "left" ? "rounded-r-xl" : "rounded-l-xl"}`}
+        } ${speakerSide === "left" ? "rounded-r-xl" : "rounded-l-xl"} ${
+          speakerSide === "left"
+            ? "before:content-[''] before:absolute before:-left-4 before:top-4 before:w-0 before:h-0 before:border-l-16 before:border-l-transparent before:border-t-12 before:border-t-black/70 before:border-b-12 before:border-b-black/70"
+            : "after:content-[''] after:absolute after:-right-4 after:top-4 after:w-0 after:h-0 after:border-r-16 after:border-r-transparent after:border-t-12 after:border-t-black/70 after:border-b-12 after:border-b-black/70"
+        }`}
       >
         {/* Speaker Badge (UI Font - Monospace) */}
         <div
