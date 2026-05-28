@@ -5,12 +5,15 @@ import type { FighterDef } from "../types/fighter";
 import { CombatParallaxBackground } from "./CombatParallaxBackground";
 import { DialogueBox } from "./DialogueBox";
 import { FighterSprite } from "./FighterSprite";
+import { ModeToggle } from "./ModeToggle";
 
 interface CombatScreenProps {
   matchId: string;
   topic: string;
   fighterA: FighterDef;
   fighterB: FighterDef;
+  debateMode: "manual" | "auto";
+  onUpdateDebateMode?: (mode: "manual" | "auto") => void;
   onRestart: () => void;
 }
 
@@ -92,6 +95,8 @@ export function CombatScreen({
   topic,
   fighterA,
   fighterB,
+  debateMode,
+  onUpdateDebateMode,
   onRestart,
 }: CombatScreenProps) {
   const {
@@ -121,7 +126,7 @@ export function CombatScreen({
   );
   const [isIntroPlaying, setIsIntroPlaying] = useState(true);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  const [manualReady, setManualReady] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsIntroPlaying(false);
@@ -410,6 +415,31 @@ export function CombatScreen({
       return () => clearTimeout(resetTimer);
     }
   }, [isComplete, userVote]);
+
+  // keep a ref of visualTurnIndex so callbacks don't need it as a dep
+  const visualIndexRef = useRef(visualTurnIndex);
+  useEffect(() => {
+    visualIndexRef.current = visualTurnIndex;
+  }, [visualTurnIndex]);
+
+  const handleTypingComplete = useCallback(() => {
+    if (visualIndexRef.current < networkTurns.length - 1) {
+      if (advanceTimerRef.current) {
+        clearTimeout(advanceTimerRef.current);
+        advanceTimerRef.current = null;
+      }
+
+      if (debateMode === "auto") {
+        advanceTimerRef.current = setTimeout(() => {
+          setManualReady(false);
+          advanceVisualTurn();
+          advanceTimerRef.current = null;
+        }, 1500);
+      } else {
+        setManualReady(true);
+      }
+    }
+  }, [networkTurns.length, advanceVisualTurn, debateMode]);
 
   return (
     <motion.div
@@ -1058,6 +1088,7 @@ export function CombatScreen({
             <h1 className="text-3xl text-arena-text font-bold uppercase">
               {topic}
             </h1>
+            <div className="absolute right-0 top-0 flex items-center gap-3"></div>
             {status === "debating" && turnCount > 0 && (
               <div className="absolute right-0 top-0 text-arena-blue font-bold text-2xl border-2 border-arena-blue px-3 py-1">
                 TURN {turnCount}
@@ -1099,18 +1130,7 @@ export function CombatScreen({
                   speakerName={fighterA.name}
                   rawText={rawText}
                   isJudge={isJudge}
-                  onTypingComplete={() => {
-                    if (visualTurnIndex < networkTurns.length - 1) {
-                      if (advanceTimerRef.current) {
-                        clearTimeout(advanceTimerRef.current);
-                      }
-
-                      advanceTimerRef.current = setTimeout(() => {
-                        advanceVisualTurn();
-                        advanceTimerRef.current = null;
-                      }, 1500);
-                    }
-                  }}
+                  onTypingComplete={handleTypingComplete}
                   speakerSide="left"
                 />
               </div>
@@ -1123,18 +1143,7 @@ export function CombatScreen({
                   speakerName={fighterB.name}
                   rawText={rawText}
                   isJudge={isJudge}
-                  onTypingComplete={() => {
-                    if (visualTurnIndex < networkTurns.length - 1) {
-                      if (advanceTimerRef.current) {
-                        clearTimeout(advanceTimerRef.current);
-                      }
-
-                      advanceTimerRef.current = setTimeout(() => {
-                        advanceVisualTurn();
-                        advanceTimerRef.current = null;
-                      }, 1500);
-                    }
-                  }}
+                  onTypingComplete={handleTypingComplete}
                   speakerSide="right"
                 />
               </div>
@@ -1147,18 +1156,7 @@ export function CombatScreen({
                   speakerName="THE JUDGE"
                   rawText={rawText}
                   isJudge={isJudge}
-                  onTypingComplete={() => {
-                    if (visualTurnIndex < networkTurns.length - 1) {
-                      if (advanceTimerRef.current) {
-                        clearTimeout(advanceTimerRef.current);
-                      }
-
-                      advanceTimerRef.current = setTimeout(() => {
-                        advanceVisualTurn();
-                        advanceTimerRef.current = null;
-                      }, 1500);
-                    }
-                  }}
+                  onTypingComplete={handleTypingComplete}
                   speakerSide="right"
                 />
               </div>
@@ -1236,16 +1234,49 @@ export function CombatScreen({
                 speakerName={speakerName}
                 rawText={rawText}
                 isJudge={false}
-                onTypingComplete={() => {
-                  if (visualTurnIndex < networkTurns.length - 1) {
-                    setTimeout(advanceVisualTurn, 1500);
-                  }
-                }}
+                onTypingComplete={handleTypingComplete}
                 speakerSide="left"
               />
             </motion.div>
           )}
       </AnimatePresence>
+
+      {/* Bottom-center Debate Mode Toggle */}
+      {!modalOpen && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-60">
+          <div className="bg-black/60 p-3 rounded-md border border-white/10">
+            <ModeToggle
+              value={debateMode}
+              onChange={(m) => {
+                if (typeof onUpdateDebateMode === "function")
+                  onUpdateDebateMode(m);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Bottom-right NEXT button for manual mode */}
+      {!modalOpen &&
+        manualReady &&
+        visualTurnIndex < networkTurns.length - 1 && (
+          <div className="absolute bottom-6 right-6 z-60">
+            <button
+              type="button"
+              onClick={() => {
+                if (advanceTimerRef.current) {
+                  clearTimeout(advanceTimerRef.current);
+                  advanceTimerRef.current = null;
+                }
+                advanceVisualTurn();
+                setManualReady(false);
+              }}
+              className="px-6 py-2 bg-white text-black font-bold uppercase rounded-sm border border-gray-300 shadow-lg min-w-24 text-center text-[1.05rem]"
+            >
+              NEXT
+            </button>
+          </div>
+        )}
 
       {isComplete && showVerdictModal && verdict && (
         <motion.div
