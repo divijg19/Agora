@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { fetchRoster, startMatch } from "../lib/api";
 import type { FighterDef } from "../types/fighter";
+import { ModeToggle } from "./ModeToggle";
 import { SetupParallaxBackground } from "./SetupParallaxBackground";
 
 interface SetupScreenProps {
@@ -10,6 +11,7 @@ interface SetupScreenProps {
     topic: string,
     fighterA: FighterDef,
     fighterB: FighterDef,
+    debateMode: "manual" | "auto",
   ) => void;
 }
 
@@ -23,6 +25,8 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
   const [hoveredB, setHoveredB] = useState<FighterDef | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debateMode, setDebateMode] = useState<"manual" | "auto">("manual");
+  const [showModePanel, setShowModePanel] = useState(false);
 
   const randomTopics = [
     "Is AI dangerous?",
@@ -84,7 +88,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
         fighter_a: fighterA.id,
         fighter_b: fighterB.id,
       });
-      onMatchStarted(matchId, topic, fighterA, fighterB);
+      onMatchStarted(matchId, topic, fighterA, fighterB, debateMode);
     } catch {
       setError("Failed to connect to the Arena Engine.");
       setIsLoading(false);
@@ -181,6 +185,35 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
             placeholder="Is remote work destroying human culture?"
           />
         </div>
+
+        {/* Debate Mode Panel Trigger (corner) */}
+        <button
+          type="button"
+          onClick={() => setShowModePanel((s) => !s)}
+          aria-label="Open debate mode"
+          className="absolute top-6 right-6 z-30 p-2 bg-black/60 rounded-md border border-white/10 hover:bg-white/10"
+        >
+          ⚙️
+        </button>
+
+        {showModePanel && (
+          <div className="absolute top-16 right-6 z-40 bg-black/70 p-3 rounded-md border border-white/10 shadow-md">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-300 uppercase font-mono">
+                Debate Mode
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowModePanel(false)}
+                className="text-gray-400 hover:text-white"
+                aria-label="Close debate mode panel"
+              >
+                ✕
+              </button>
+            </div>
+            <ModeToggle value={debateMode} onChange={setDebateMode} />
+          </div>
+        )}
 
         {/* Horizontal Bar Roster Menus */}
         <div className="flex w-full justify-between gap-12 px-8" id="roster">

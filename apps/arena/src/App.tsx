@@ -10,6 +10,7 @@ interface MatchConfig {
   topic: string;
   fighterA: FighterDef;
   fighterB: FighterDef;
+  debateMode: "manual" | "auto";
 }
 
 function App() {
@@ -21,8 +22,13 @@ function App() {
     topic: string,
     fighterA: FighterDef,
     fighterB: FighterDef,
+    debateMode: "manual" | "auto",
   ) => {
-    setMatchConfig({ id, topic, fighterA, fighterB });
+    setMatchConfig({ id, topic, fighterA, fighterB, debateMode });
+  };
+
+  const handleUpdateDebateMode = (mode: "manual" | "auto") => {
+    setMatchConfig((prev) => (prev ? { ...prev, debateMode: mode } : prev));
   };
 
   const handleReset = () => {
@@ -45,6 +51,8 @@ function App() {
               topic={matchConfig.topic}
               fighterA={matchConfig.fighterA}
               fighterB={matchConfig.fighterB}
+              debateMode={matchConfig.debateMode}
+              onUpdateDebateMode={handleUpdateDebateMode}
               onRestart={handleReset}
             />
           )}
