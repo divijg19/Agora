@@ -73,6 +73,20 @@ const ORB_INNER_FLAMES = [
   },
 ];
 
+const STAGE_PROGRESSION = [
+  { speedMult: 1.0, opacityMult: 0.8, scaleMult: 0.9 }, // Stage 0 (0-10%)
+  { speedMult: 1.02, opacityMult: 0.82, scaleMult: 0.92 }, // Stage 1 (10-20%)
+  { speedMult: 1.04, opacityMult: 0.84, scaleMult: 0.94 }, // Stage 2 (20-30%)
+  { speedMult: 1.06, opacityMult: 0.86, scaleMult: 0.96 }, // Stage 3 (30-40%)
+  { speedMult: 1.08, opacityMult: 0.88, scaleMult: 0.98 }, // Stage 4 (40-50%)
+  { speedMult: 1.1, opacityMult: 0.9, scaleMult: 1.0 }, // Stage 5 (50-60%)
+  { speedMult: 1.12, opacityMult: 0.92, scaleMult: 1.02 }, // Stage 6 (60-70%)
+  { speedMult: 1.14, opacityMult: 0.94, scaleMult: 1.04 }, // Stage 7 (70-80%)
+  { speedMult: 1.16, opacityMult: 0.96, scaleMult: 1.06 }, // Stage 8 (80-90%)
+  { speedMult: 1.18, opacityMult: 0.98, scaleMult: 1.08 }, // Stage 9 (90-100%)
+  { speedMult: 1.2, opacityMult: 1.0, scaleMult: 1.1 }, // Stage 10 (100%)
+];
+
 export function CombatScreen({
   matchId,
   topic,
@@ -318,6 +332,14 @@ export function CombatScreen({
   const orbMotionA = Math.max(2.8, 5.2 - orbChargeRatioA * 1.6);
   const orbMotionB = Math.max(2.8, 5.2 - orbChargeRatioB * 1.6);
 
+  // Stage ladder for 10% animation bands
+  const orbStageA = Math.min(10, Math.floor(orbChargeA / 10));
+  const orbStageB = Math.min(10, Math.floor(orbChargeB / 10));
+  const stageProg_A = STAGE_PROGRESSION[orbStageA];
+  const stageProg_B = STAGE_PROGRESSION[orbStageB];
+  const orbSpeedA = orbMotionA * stageProg_A.speedMult;
+  const orbSpeedB = orbMotionB * stageProg_B.speedMult;
+
   useEffect(() => {
     const amount = baseTurnCharge + intentFillPercent(activeIntentVisual);
     if (isASpeaking && amount > 0) {
@@ -501,24 +523,24 @@ export function CombatScreen({
                 }}
                 animate={{
                   opacity: [
-                    0.14 + orbChargeRatioA * 0.44,
-                    0.18 + orbChargeRatioA * 0.56,
-                    0.16 + orbChargeRatioA * 0.5,
+                    (0.14 + orbChargeRatioA * 0.44) * stageProg_A.opacityMult,
+                    (0.18 + orbChargeRatioA * 0.56) * stageProg_A.opacityMult,
+                    (0.16 + orbChargeRatioA * 0.5) * stageProg_A.opacityMult,
                   ],
                   scaleX: [
-                    0.92 + orbChargeRatioA * 0.12,
-                    0.96 + orbChargeRatioA * 0.16,
-                    0.93 + orbChargeRatioA * 0.14,
+                    (0.92 + orbChargeRatioA * 0.12) * stageProg_A.scaleMult,
+                    (0.96 + orbChargeRatioA * 0.16) * stageProg_A.scaleMult,
+                    (0.93 + orbChargeRatioA * 0.14) * stageProg_A.scaleMult,
                   ],
                   scaleY: [
-                    0.9 + orbChargeRatioA * 0.22,
-                    0.98 + orbChargeRatioA * 0.34,
-                    0.92 + orbChargeRatioA * 0.28,
+                    (0.9 + orbChargeRatioA * 0.22) * stageProg_A.scaleMult,
+                    (0.98 + orbChargeRatioA * 0.34) * stageProg_A.scaleMult,
+                    (0.92 + orbChargeRatioA * 0.28) * stageProg_A.scaleMult,
                   ],
                   y: [0, -2, -1],
                 }}
                 transition={{
-                  duration: orbMotionA,
+                  duration: orbSpeedA,
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
@@ -530,19 +552,19 @@ export function CombatScreen({
                 className="absolute inset-[12%] rounded-full overflow-hidden pointer-events-none"
                 animate={{
                   opacity: [
-                    0.08 + orbChargeRatioA * 0.34,
-                    0.12 + orbChargeRatioA * 0.42,
-                    0.1 + orbChargeRatioA * 0.38,
+                    (0.08 + orbChargeRatioA * 0.34) * stageProg_A.opacityMult,
+                    (0.12 + orbChargeRatioA * 0.42) * stageProg_A.opacityMult,
+                    (0.1 + orbChargeRatioA * 0.38) * stageProg_A.opacityMult,
                   ],
                   scale: [
-                    0.99 + orbChargeRatioA * 0.02,
-                    1.0 + orbChargeRatioA * 0.04,
-                    0.995 + orbChargeRatioA * 0.03,
+                    (0.99 + orbChargeRatioA * 0.02) * stageProg_A.scaleMult,
+                    (1.0 + orbChargeRatioA * 0.04) * stageProg_A.scaleMult,
+                    (0.995 + orbChargeRatioA * 0.03) * stageProg_A.scaleMult,
                   ],
                   y: [4, 0, -2],
                 }}
                 transition={{
-                  duration: orbMotionA,
+                  duration: orbSpeedA,
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
@@ -568,23 +590,29 @@ export function CombatScreen({
                     }}
                     animate={{
                       opacity: [
-                        0.12 + orbChargeRatioA * 0.42,
-                        0.18 + orbChargeRatioA * 0.7,
-                        0.14 + orbChargeRatioA * 0.55,
+                        (0.12 + orbChargeRatioA * 0.42) *
+                          stageProg_A.opacityMult,
+                        (0.18 + orbChargeRatioA * 0.7) *
+                          stageProg_A.opacityMult,
+                        (0.14 + orbChargeRatioA * 0.55) *
+                          stageProg_A.opacityMult,
                       ],
                       scale: [
-                        0.7 +
-                          orbChargeRatioA * (orbChargeA >= 70 ? 0.36 : 0.24),
-                        0.76 +
-                          orbChargeRatioA * (orbChargeA >= 70 ? 0.48 : 0.3),
-                        0.72 +
-                          orbChargeRatioA * (orbChargeA >= 70 ? 0.4 : 0.26),
+                        (0.7 +
+                          orbChargeRatioA * (orbChargeA >= 70 ? 0.36 : 0.24)) *
+                          stageProg_A.scaleMult,
+                        (0.76 +
+                          orbChargeRatioA * (orbChargeA >= 70 ? 0.48 : 0.3)) *
+                          stageProg_A.scaleMult,
+                        (0.72 +
+                          orbChargeRatioA * (orbChargeA >= 70 ? 0.4 : 0.26)) *
+                          stageProg_A.scaleMult,
                       ],
                       y: [3, -1, 1],
                       rotate: [-4, 4, -2],
                     }}
                     transition={{
-                      duration: orbMotionA,
+                      duration: orbSpeedA,
                       repeat: Infinity,
                       ease: "easeInOut",
                       delay: parseFloat(tongue.delay),
@@ -609,41 +637,57 @@ export function CombatScreen({
                   mixBlendMode: "screen",
                 }}
                 animate={{
-                  scale: 0.78 + orbChargeRatioA * 0.2,
-                  opacity: 0.15 + Math.min(0.85, orbChargeRatioA),
-                }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-              />
-
-              <motion.div
-                className="absolute inset-[14%] rounded-full pointer-events-none"
-                style={{
-                  background: orbColorsA.coreGradient,
-                  filter: "blur(2px)",
-                  mixBlendMode: "screen",
-                }}
-                animate={{
-                  opacity: Math.max(0, Math.min(0.9, orbChargeRatioA * 1.1)),
-                  scale: 0.9 + orbChargeRatioA * 0.15,
-                }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-              />
-
-              <motion.div
-                className="absolute inset-[16%] rounded-full pointer-events-none"
-                style={{
-                  background: orbColorsA.highGlow,
-                  filter: "blur(1.2px)",
-                  mixBlendMode: "screen",
-                }}
-                animate={{
+                  scale: (0.78 + orbChargeRatioA * 0.2) * stageProg_A.scaleMult,
                   opacity:
-                    orbChargeA > 45 ? 0.2 + Math.min(0.66, orbChargeRatioA) : 0,
-                  scale: 0.9 + orbChargeRatioA * 0.12,
+                    (0.15 + Math.min(0.85, orbChargeRatioA)) *
+                    stageProg_A.opacityMult,
                 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
               />
 
+              {/* Core layer 2 activates at stage 3 (30% charge) */}
+              {orbStageA >= 3 && (
+                <motion.div
+                  className="absolute inset-[14%] rounded-full pointer-events-none"
+                  style={{
+                    background: orbColorsA.coreGradient,
+                    filter: "blur(2px)",
+                    mixBlendMode: "screen",
+                  }}
+                  animate={{
+                    opacity:
+                      Math.max(0, Math.min(0.9, orbChargeRatioA * 1.1)) *
+                      stageProg_A.opacityMult,
+                    scale:
+                      (0.9 + orbChargeRatioA * 0.15) * stageProg_A.scaleMult,
+                  }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                />
+              )}
+
+              {/* Core layer 3 & high glow activate at stage 6 (60% charge) */}
+              {orbStageA >= 6 && (
+                <motion.div
+                  className="absolute inset-[16%] rounded-full pointer-events-none"
+                  style={{
+                    background: orbColorsA.highGlow,
+                    filter: "blur(1.2px)",
+                    mixBlendMode: "screen",
+                  }}
+                  animate={{
+                    opacity:
+                      orbChargeA > 45
+                        ? (0.2 + Math.min(0.66, orbChargeRatioA)) *
+                          stageProg_A.opacityMult
+                        : 0,
+                    scale:
+                      (0.9 + orbChargeRatioA * 0.12) * stageProg_A.scaleMult,
+                  }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                />
+              )}
+
+              {/* Inner flame wisps emerge at 10% charge, intensity grows with stage */}
               {orbChargeA > 10 && (
                 <div className="absolute inset-0 pointer-events-none">
                   {ORB_INNER_FLAMES.map((flame) => (
@@ -657,23 +701,31 @@ export function CombatScreen({
                       }}
                       animate={{
                         opacity: [
-                          0.18 + orbChargeRatioA * 0.46,
-                          0.28 + orbChargeRatioA * 0.62,
-                          0.2 + orbChargeRatioA * 0.52,
+                          (0.18 + orbChargeRatioA * 0.46) *
+                            stageProg_A.opacityMult,
+                          (0.28 + orbChargeRatioA * 0.62) *
+                            stageProg_A.opacityMult,
+                          (0.2 + orbChargeRatioA * 0.52) *
+                            stageProg_A.opacityMult,
                         ],
                         scale: [
-                          0.6 +
-                            orbChargeRatioA * (orbChargeA >= 70 ? 0.42 : 0.28),
-                          0.66 +
-                            orbChargeRatioA * (orbChargeA >= 70 ? 0.52 : 0.34),
-                          0.62 +
-                            orbChargeRatioA * (orbChargeA >= 70 ? 0.46 : 0.3),
+                          (0.6 +
+                            orbChargeRatioA *
+                              (orbChargeA >= 70 ? 0.42 : 0.28)) *
+                            stageProg_A.scaleMult,
+                          (0.66 +
+                            orbChargeRatioA *
+                              (orbChargeA >= 70 ? 0.52 : 0.34)) *
+                            stageProg_A.scaleMult,
+                          (0.62 +
+                            orbChargeRatioA * (orbChargeA >= 70 ? 0.46 : 0.3)) *
+                            stageProg_A.scaleMult,
                         ],
                         y: [4, -1, 2],
                         rotate: [-2, 2, 0],
                       }}
                       transition={{
-                        duration: orbMotionA,
+                        duration: orbSpeedA,
                         repeat: Infinity,
                         ease: "easeInOut",
                         delay: parseFloat(flame.delay),
@@ -767,24 +819,24 @@ export function CombatScreen({
                 }}
                 animate={{
                   opacity: [
-                    0.14 + orbChargeRatioB * 0.44,
-                    0.18 + orbChargeRatioB * 0.56,
-                    0.16 + orbChargeRatioB * 0.5,
+                    (0.14 + orbChargeRatioB * 0.44) * stageProg_B.opacityMult,
+                    (0.18 + orbChargeRatioB * 0.56) * stageProg_B.opacityMult,
+                    (0.16 + orbChargeRatioB * 0.5) * stageProg_B.opacityMult,
                   ],
                   scaleX: [
-                    0.92 + orbChargeRatioB * 0.12,
-                    0.96 + orbChargeRatioB * 0.16,
-                    0.93 + orbChargeRatioB * 0.14,
+                    (0.92 + orbChargeRatioB * 0.12) * stageProg_B.scaleMult,
+                    (0.96 + orbChargeRatioB * 0.16) * stageProg_B.scaleMult,
+                    (0.93 + orbChargeRatioB * 0.14) * stageProg_B.scaleMult,
                   ],
                   scaleY: [
-                    0.9 + orbChargeRatioB * 0.22,
-                    0.98 + orbChargeRatioB * 0.34,
-                    0.92 + orbChargeRatioB * 0.28,
+                    (0.9 + orbChargeRatioB * 0.22) * stageProg_B.scaleMult,
+                    (0.98 + orbChargeRatioB * 0.34) * stageProg_B.scaleMult,
+                    (0.92 + orbChargeRatioB * 0.28) * stageProg_B.scaleMult,
                   ],
                   y: [0, -2, -1],
                 }}
                 transition={{
-                  duration: orbMotionB,
+                  duration: orbSpeedB,
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
@@ -796,19 +848,19 @@ export function CombatScreen({
                 className="absolute inset-[12%] rounded-full overflow-hidden pointer-events-none"
                 animate={{
                   opacity: [
-                    0.08 + orbChargeRatioB * 0.34,
-                    0.12 + orbChargeRatioB * 0.42,
-                    0.1 + orbChargeRatioB * 0.38,
+                    (0.08 + orbChargeRatioB * 0.34) * stageProg_B.opacityMult,
+                    (0.12 + orbChargeRatioB * 0.42) * stageProg_B.opacityMult,
+                    (0.1 + orbChargeRatioB * 0.38) * stageProg_B.opacityMult,
                   ],
                   scale: [
-                    0.99 + orbChargeRatioB * 0.02,
-                    1.0 + orbChargeRatioB * 0.04,
-                    0.995 + orbChargeRatioB * 0.03,
+                    (0.99 + orbChargeRatioB * 0.02) * stageProg_B.scaleMult,
+                    (1.0 + orbChargeRatioB * 0.04) * stageProg_B.scaleMult,
+                    (0.995 + orbChargeRatioB * 0.03) * stageProg_B.scaleMult,
                   ],
                   y: [4, 0, -2],
                 }}
                 transition={{
-                  duration: orbMotionB,
+                  duration: orbSpeedB,
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
@@ -834,23 +886,29 @@ export function CombatScreen({
                     }}
                     animate={{
                       opacity: [
-                        0.12 + orbChargeRatioB * 0.42,
-                        0.18 + orbChargeRatioB * 0.7,
-                        0.14 + orbChargeRatioB * 0.55,
+                        (0.12 + orbChargeRatioB * 0.42) *
+                          stageProg_B.opacityMult,
+                        (0.18 + orbChargeRatioB * 0.7) *
+                          stageProg_B.opacityMult,
+                        (0.14 + orbChargeRatioB * 0.55) *
+                          stageProg_B.opacityMult,
                       ],
                       scale: [
-                        0.7 +
-                          orbChargeRatioB * (orbChargeB >= 70 ? 0.36 : 0.24),
-                        0.76 +
-                          orbChargeRatioB * (orbChargeB >= 70 ? 0.48 : 0.3),
-                        0.72 +
-                          orbChargeRatioB * (orbChargeB >= 70 ? 0.4 : 0.26),
+                        (0.7 +
+                          orbChargeRatioB * (orbChargeB >= 70 ? 0.36 : 0.24)) *
+                          stageProg_B.scaleMult,
+                        (0.76 +
+                          orbChargeRatioB * (orbChargeB >= 70 ? 0.48 : 0.3)) *
+                          stageProg_B.scaleMult,
+                        (0.72 +
+                          orbChargeRatioB * (orbChargeB >= 70 ? 0.4 : 0.26)) *
+                          stageProg_B.scaleMult,
                       ],
                       y: [3, -1, 1],
                       rotate: [-4, 4, -2],
                     }}
                     transition={{
-                      duration: orbMotionB,
+                      duration: orbSpeedB,
                       repeat: Infinity,
                       ease: "easeInOut",
                       delay: parseFloat(tongue.delay),
@@ -875,41 +933,57 @@ export function CombatScreen({
                   mixBlendMode: "screen",
                 }}
                 animate={{
-                  scale: 0.78 + orbChargeRatioB * 0.2,
-                  opacity: 0.15 + Math.min(0.85, orbChargeRatioB),
-                }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-              />
-
-              <motion.div
-                className="absolute inset-[14%] rounded-full pointer-events-none"
-                style={{
-                  background: orbColorsB.coreGradient,
-                  filter: "blur(2px)",
-                  mixBlendMode: "screen",
-                }}
-                animate={{
-                  opacity: Math.max(0, Math.min(0.9, orbChargeRatioB * 1.1)),
-                  scale: 0.9 + orbChargeRatioB * 0.15,
-                }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-              />
-
-              <motion.div
-                className="absolute inset-[16%] rounded-full pointer-events-none"
-                style={{
-                  background: orbColorsB.highGlow,
-                  filter: "blur(1.2px)",
-                  mixBlendMode: "screen",
-                }}
-                animate={{
+                  scale: (0.78 + orbChargeRatioB * 0.2) * stageProg_B.scaleMult,
                   opacity:
-                    orbChargeB > 45 ? 0.2 + Math.min(0.66, orbChargeRatioB) : 0,
-                  scale: 0.9 + orbChargeRatioB * 0.12,
+                    (0.15 + Math.min(0.85, orbChargeRatioB)) *
+                    stageProg_B.opacityMult,
                 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
               />
 
+              {/* Core layer 2 activates at stage 3 (30% charge) */}
+              {orbStageB >= 3 && (
+                <motion.div
+                  className="absolute inset-[14%] rounded-full pointer-events-none"
+                  style={{
+                    background: orbColorsB.coreGradient,
+                    filter: "blur(2px)",
+                    mixBlendMode: "screen",
+                  }}
+                  animate={{
+                    opacity:
+                      Math.max(0, Math.min(0.9, orbChargeRatioB * 1.1)) *
+                      stageProg_B.opacityMult,
+                    scale:
+                      (0.9 + orbChargeRatioB * 0.15) * stageProg_B.scaleMult,
+                  }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                />
+              )}
+
+              {/* Core layer 3 & high glow activate at stage 6 (60% charge) */}
+              {orbStageB >= 6 && (
+                <motion.div
+                  className="absolute inset-[16%] rounded-full pointer-events-none"
+                  style={{
+                    background: orbColorsB.highGlow,
+                    filter: "blur(1.2px)",
+                    mixBlendMode: "screen",
+                  }}
+                  animate={{
+                    opacity:
+                      orbChargeB > 45
+                        ? (0.2 + Math.min(0.66, orbChargeRatioB)) *
+                          stageProg_B.opacityMult
+                        : 0,
+                    scale:
+                      (0.9 + orbChargeRatioB * 0.12) * stageProg_B.scaleMult,
+                  }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                />
+              )}
+
+              {/* Inner flame wisps emerge at 10% charge, intensity grows with stage */}
               {orbChargeB > 10 && (
                 <div className="absolute inset-0 pointer-events-none">
                   {ORB_INNER_FLAMES.map((flame) => (
@@ -923,23 +997,31 @@ export function CombatScreen({
                       }}
                       animate={{
                         opacity: [
-                          0.18 + orbChargeRatioB * 0.46,
-                          0.28 + orbChargeRatioB * 0.62,
-                          0.2 + orbChargeRatioB * 0.52,
+                          (0.18 + orbChargeRatioB * 0.46) *
+                            stageProg_B.opacityMult,
+                          (0.28 + orbChargeRatioB * 0.62) *
+                            stageProg_B.opacityMult,
+                          (0.2 + orbChargeRatioB * 0.52) *
+                            stageProg_B.opacityMult,
                         ],
                         scale: [
-                          0.6 +
-                            orbChargeRatioB * (orbChargeB >= 70 ? 0.42 : 0.28),
-                          0.66 +
-                            orbChargeRatioB * (orbChargeB >= 70 ? 0.52 : 0.34),
-                          0.62 +
-                            orbChargeRatioB * (orbChargeB >= 70 ? 0.46 : 0.3),
+                          (0.6 +
+                            orbChargeRatioB *
+                              (orbChargeB >= 70 ? 0.42 : 0.28)) *
+                            stageProg_B.scaleMult,
+                          (0.66 +
+                            orbChargeRatioB *
+                              (orbChargeB >= 70 ? 0.52 : 0.34)) *
+                            stageProg_B.scaleMult,
+                          (0.62 +
+                            orbChargeRatioB * (orbChargeB >= 70 ? 0.46 : 0.3)) *
+                            stageProg_B.scaleMult,
                         ],
                         y: [4, -1, 2],
                         rotate: [-2, 2, 0],
                       }}
                       transition={{
-                        duration: orbMotionB,
+                        duration: orbSpeedB,
                         repeat: Infinity,
                         ease: "easeInOut",
                         delay: parseFloat(flame.delay),
