@@ -73,35 +73,6 @@ const ORB_INNER_FLAMES = [
   },
 ];
 
-// Stage progression for 10% animation bands: multipliers for speed, opacity, and scale intensity
-// Animation base values consolidated for easy tuning and reduced duplication
-// Usage: Centralizes magic numbers for all orb animation layers (opacity, scale, charge multipliers)
-// Pattern: baseValue + orbChargeRatio * chargeMult, then multiply by stageProg.opacityMult or stageProg.scaleMult
-const _ORB_ANIM_BASE_VALUES = {
-  backFlame: {
-    opacity: [0.14, 0.18, 0.16],
-    opacityChargeMults: [0.44, 0.56, 0.5],
-    scaleX: [0.92, 0.96, 0.93],
-    scaleXChargeMults: [0.12, 0.16, 0.14],
-    scaleY: [0.9, 0.98, 0.92],
-    scaleYChargeMults: [0.22, 0.34, 0.28],
-  },
-  corona: {
-    opacity: [0.08, 0.12, 0.1],
-    opacityChargeMults: [0.34, 0.42, 0.38],
-    scale: [0.99, 1.0, 0.995],
-    scaleChargeMults: [0.02, 0.04, 0.03],
-  },
-  rimFlame: {
-    opacity: [0.12, 0.18, 0.14],
-    opacityChargeMults: [0.42, 0.7, 0.55],
-  },
-  innerFlame: {
-    opacity: [0.18, 0.28, 0.2],
-    opacityChargeMults: [0.46, 0.62, 0.52],
-  },
-} as const;
-
 const STAGE_PROGRESSION = [
   { speedMult: 1.0, opacityMult: 0.8, scaleMult: 0.9 }, // Stage 0 (0-10%)
   { speedMult: 1.02, opacityMult: 0.82, scaleMult: 0.92 }, // Stage 1 (10-20%)
@@ -364,27 +335,10 @@ export function CombatScreen({
   // Stage ladder for 10% animation bands
   const orbStageA = Math.min(10, Math.floor(orbChargeA / 10));
   const orbStageB = Math.min(10, Math.floor(orbChargeB / 10));
-  const _orbStageWeightA = (orbChargeA % 10) / 10; // 0-1 progress within current stage; reserved for future micro-easing
-  const _orbStageWeightB = (orbChargeB % 10) / 10; // reserved for future micro-easing
   const stageProg_A = STAGE_PROGRESSION[orbStageA];
   const stageProg_B = STAGE_PROGRESSION[orbStageB];
   const orbSpeedA = orbMotionA * stageProg_A.speedMult;
   const orbSpeedB = orbMotionB * stageProg_B.speedMult;
-
-  // Stage-weighted multiplier helper: applies opacity or scale modulation from stage progression
-  // Usage: sW(baseValue + orbChargeRatio * chargeMult, stageProg.opacityMult) to reduce inline noise
-  const _sW = (value: number, mult: number) => value * mult;
-
-  // Helper to generate stage-weighted animation value arrays from base and charge multiplier arrays
-  const _stageWeightedArray = (
-    baseValues: number[],
-    chargeMultipliers: number[],
-    chargeRatio: number,
-    stageMult: number,
-  ): number[] =>
-    baseValues.map(
-      (base, i) => (base + chargeRatio * chargeMultipliers[i]) * stageMult,
-    );
 
   useEffect(() => {
     const amount = baseTurnCharge + intentFillPercent(activeIntentVisual);
