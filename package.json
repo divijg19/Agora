@@ -21,7 +21,7 @@
 		"qa": "bun lint && bun type"
 	},
 	"devDependencies": {
-		"concurrently": "^9.2.1"
+		"concurrently": "^10.0.0"
 	},
 	"dependencies": {
 		"@biomejs/biome": "^2.4.16"
