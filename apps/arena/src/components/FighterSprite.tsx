@@ -114,11 +114,12 @@ export function FighterSprite({
   const yOffset = fighter.id === "economist" ? "4%" : "0%";
 
   // Health bars moved to CombatScreen (top corners)
+  // FighterSprite starts at the position where transition bridge ends (x: 0, opacity: 1)
+  // to ensure seamless transition with no jank or delay
   return (
     <motion.div
-      initial={{ x: facing === "right" ? -300 : 300, opacity: 0 }}
+      initial={{ x: 0, opacity: 1 }}
       animate={{ x: 0, opacity: 1 }}
-      transition={{ type: "spring", damping: 15, stiffness: 100, delay: 0.5 }}
       className="flex flex-col items-center z-10 relative"
     >
       {/* The Portrait Sprite */}
