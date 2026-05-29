@@ -1136,7 +1136,7 @@ export function CombatScreen({
               modalOpen ? "opacity-60 blur-[1px]" : "opacity-100"
             }`}
           >
-            <div className="translate-y-48">
+            <div className="translate-y-full md:translate-y-[35vh]">
               <FighterSprite
                 fighter={fighterA}
                 isActive={isASpeaking}
@@ -1229,7 +1229,7 @@ export function CombatScreen({
               )}
             </div>
 
-            <div className="translate-y-48">
+            <div className="translate-y-full md:translate-y-[35vh]">
               <FighterSprite
                 fighter={fighterB}
                 isActive={isBSpeaking}
