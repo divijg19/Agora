@@ -19,6 +19,12 @@ function App() {
   const [transitioningMatch, setTransitioningMatch] =
     useState<MatchConfig | null>(null);
 
+  const finalizeTransition = useCallback((nextMatch: MatchConfig | null) => {
+    if (!nextMatch) return;
+    setMatchConfig(nextMatch);
+    setTransitioningMatch(null);
+  }, []);
+
   // When match starts, show the transition bridge first
   const handleMatchStarted = (
     id: string,
@@ -38,22 +44,19 @@ function App() {
   };
 
   // Called when the sprite transition bridge animation completes
-  const handleTransitionComplete = useCallback(() => {
-    if (transitioningMatch) {
-      setMatchConfig(transitioningMatch);
-      setTransitioningMatch(null);
-    }
-  }, [transitioningMatch]);
+  const handleTransitionComplete = () => {
+    finalizeTransition(transitioningMatch);
+  };
 
   // Safety timeout in case onAnimationComplete doesn't fire
   useEffect(() => {
     if (transitioningMatch && !matchConfig) {
       const timer = setTimeout(() => {
-        handleTransitionComplete();
+        finalizeTransition(transitioningMatch);
       }, 700); // Slightly longer than bridge animation (600ms)
       return () => clearTimeout(timer);
     }
-  }, [transitioningMatch, matchConfig, handleTransitionComplete]);
+  }, [transitioningMatch, matchConfig, finalizeTransition]);
 
   const handleUpdateDebateMode = (mode: "manual" | "auto") => {
     setMatchConfig((prev) => (prev ? { ...prev, debateMode: mode } : prev));
@@ -75,7 +78,6 @@ function App() {
           <SpriteTransitionBridge
             fighterA={transitioningMatch.fighterA}
             fighterB={transitioningMatch.fighterB}
-            isActive={true}
             onTransitionComplete={handleTransitionComplete}
           />
         )}

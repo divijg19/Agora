@@ -1,6 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { MatchVerdict } from "../hooks/useEngineStream";
+import {
+  COMBAT_SPRITE_HEIGHT_PX,
+  getFighterYOffset,
+} from "../lib/spritePositioning";
 import type { FighterDef } from "../types/fighter";
 
 const POINTING_INTENTS = [
@@ -111,7 +115,7 @@ export function FighterSprite({
     };
     spriteTransition = { duration: 0.5 };
   }
-  const yOffset = fighter.id === "economist" ? "4%" : "0%";
+  const yOffset = getFighterYOffset(fighter.id);
 
   // Health bars moved to CombatScreen (top corners)
   // FighterSprite starts at the position where transition bridge ends (x: 0, opacity: 1)
@@ -126,8 +130,11 @@ export function FighterSprite({
       <motion.div
         animate={spriteAnimation}
         transition={spriteTransition}
-        className="w-auto h-72 flex items-end justify-center relative overflow-visible drop-shadow-2xl"
-        style={{ transformOrigin: "bottom center" }}
+        className="w-auto flex items-end justify-center relative overflow-visible drop-shadow-2xl"
+        style={{
+          height: COMBAT_SPRITE_HEIGHT_PX,
+          transformOrigin: "bottom center",
+        }}
       >
         <img
           src={spriteSrc}

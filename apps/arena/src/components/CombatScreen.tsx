@@ -238,6 +238,7 @@ export function CombatScreen({
         ? 100
         : 0
       : 100;
+  const stageFighterPlacementClass = "translate-y-full md:translate-y-[35vh]";
   const winnerName =
     isComplete && verdict.winner_id === fighterA.id
       ? fighterA.name
@@ -1136,7 +1137,7 @@ export function CombatScreen({
               modalOpen ? "opacity-60 blur-[1px]" : "opacity-100"
             }`}
           >
-            <div className="translate-y-full md:translate-y-[35vh]">
+            <div className={stageFighterPlacementClass}>
               <FighterSprite
                 fighter={fighterA}
                 isActive={isASpeaking}
@@ -1229,7 +1230,7 @@ export function CombatScreen({
               )}
             </div>
 
-            <div className="translate-y-full md:translate-y-[35vh]">
+            <div className={stageFighterPlacementClass}>
               <FighterSprite
                 fighter={fighterB}
                 isActive={isBSpeaking}
