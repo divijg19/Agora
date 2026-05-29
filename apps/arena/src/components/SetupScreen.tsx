@@ -1,6 +1,12 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { fetchRoster, startMatch } from "../lib/api";
+import {
+  getFighterYOffset,
+  SETUP_HEIGHT_VH,
+  SETUP_X_OFFSET_IDLE,
+  SETUP_X_OFFSET_SELECTED,
+} from "../lib/spritePositioning";
 import type { FighterDef } from "../types/fighter";
 import { ModeToggle } from "./ModeToggle";
 import { SetupParallaxBackground } from "./SetupParallaxBackground";
@@ -48,6 +54,10 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
     fighterA !== null &&
     fighterB !== null &&
     fighterA.id !== fighterB.id;
+  const previewA = hoveredA || fighterA || roster[0];
+  const previewB = hoveredB || fighterB || roster[1];
+  const isASelected = hoveredA || fighterA;
+  const isBSelected = hoveredB || fighterB;
 
   const handleRandomTopic = () => {
     const choice =
@@ -107,22 +117,19 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
       {/* GIANT SILHOUETTES (Background Layer) */}
       {/* Player 1 Silhouette (Left) */}
       <div
-        className={`absolute left-0 bottom-0 h-[80vh] w-1/2 pointer-events-none z-0 flex items-end justify-start overflow-visible ${
+        className={`absolute left-0 bottom-0 w-1/2 pointer-events-none z-0 flex items-end justify-start overflow-visible ${
           fighterA ? "opacity-80" : "opacity-60"
         }`}
+        style={{ height: `${SETUP_HEIGHT_VH}vh` }}
       >
         <motion.img
-          src={(hoveredA || fighterA || roster[0])?.animations.idle}
+          src={previewA?.animations.idle}
           animate={{
-            filter:
-              hoveredA || fighterA
-                ? "brightness(1) drop-shadow(0 0 30px rgba(60,130,255,0.5))"
-                : "brightness(0)",
-            x: hoveredA || fighterA ? -250 : -50,
-            y:
-              (hoveredA || fighterA || roster[0])?.id === "economist"
-                ? "4%"
-                : "0%",
+            filter: isASelected
+              ? "brightness(1) drop-shadow(0 0 30px rgba(60,130,255,0.5))"
+              : "brightness(0)",
+            x: isASelected ? -SETUP_X_OFFSET_SELECTED : -SETUP_X_OFFSET_IDLE,
+            y: getFighterYOffset(previewA?.id ?? ""),
           }}
           transition={{ type: "spring", stiffness: 100 }}
           className="h-full w-auto max-w-none object-contain object-bottom pixelated origin-bottom"
@@ -132,22 +139,19 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
 
       {/* Player 2 Silhouette (Right) */}
       <div
-        className={`absolute right-0 bottom-0 h-[80vh] w-1/2 pointer-events-none z-0 flex items-end justify-end overflow-visible ${
+        className={`absolute right-0 bottom-0 w-1/2 pointer-events-none z-0 flex items-end justify-end overflow-visible ${
           fighterB ? "opacity-80" : "opacity-60"
         }`}
+        style={{ height: `${SETUP_HEIGHT_VH}vh` }}
       >
         <motion.img
-          src={(hoveredB || fighterB || roster[1])?.animations.idle}
+          src={previewB?.animations.idle}
           animate={{
-            filter:
-              hoveredB || fighterB
-                ? "brightness(1) drop-shadow(0 0 30px rgba(255,60,60,0.5))"
-                : "brightness(0)",
-            x: hoveredB || fighterB ? 250 : 50,
-            y:
-              (hoveredB || fighterB || roster[1])?.id === "economist"
-                ? "4%"
-                : "0%",
+            filter: isBSelected
+              ? "brightness(1) drop-shadow(0 0 30px rgba(255,60,60,0.5))"
+              : "brightness(0)",
+            x: isBSelected ? SETUP_X_OFFSET_SELECTED : SETUP_X_OFFSET_IDLE,
+            y: getFighterYOffset(previewB?.id ?? ""),
             scaleX: -1,
           }}
           transition={{ type: "spring", stiffness: 100 }}

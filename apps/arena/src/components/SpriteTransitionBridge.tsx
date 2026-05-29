@@ -1,27 +1,30 @@
 import { motion } from "framer-motion";
-import { calculateCombatYPixels } from "../lib/spritePositioning";
+import {
+  COMBAT_SPRITE_HEIGHT_PX,
+  calculateCombatYPixels,
+  TRANSITION_DURATION_MS,
+  TRANSITION_INITIAL_SCALE,
+  TRANSITION_INITIAL_X_OFFSET,
+  TRANSITION_INITIAL_Y_VIEWPORT,
+} from "../lib/spritePositioning";
 import type { FighterDef } from "../types/fighter";
 
 interface SpriteTransitionBridgeProps {
   fighterA: FighterDef;
   fighterB: FighterDef;
-  isActive: boolean;
   onTransitionComplete?: () => void;
 }
 
 export function SpriteTransitionBridge({
   fighterA,
   fighterB,
-  isActive,
   onTransitionComplete,
 }: SpriteTransitionBridgeProps) {
-  if (!isActive) return null;
-
   // Animate from setup silhouette (large, bottom-aligned) to combat stage (medium, centered)
   // Setup: h-[80vh] positioned at bottom corners
-  // Combat: h-72 (~288px) positioned center, translate-y-[35vh]
-  const transitionDuration = 0.6;
+  // Combat: shared sprite height and translate-y-[35vh]
   const combatYPixels = calculateCombatYPixels(window.innerHeight);
+  const transitionDuration = TRANSITION_DURATION_MS / 1000;
 
   return (
     <motion.div
@@ -36,9 +39,9 @@ export function SpriteTransitionBridge({
       {/* Fighter A: Left side - animates to combat screen position */}
       <motion.div
         initial={{
-          x: -300,
-          y: "20vh",
-          scale: 2.5,
+          x: -TRANSITION_INITIAL_X_OFFSET,
+          y: TRANSITION_INITIAL_Y_VIEWPORT,
+          scale: TRANSITION_INITIAL_SCALE,
           opacity: 0,
         }}
         animate={{
@@ -56,17 +59,20 @@ export function SpriteTransitionBridge({
         <img
           src={fighterA.animations.idle}
           alt={`${fighterA.name} transition`}
-          className="h-72 w-auto max-w-none object-contain object-bottom pixelated"
-          style={{ imageRendering: "pixelated" }}
+          className="w-auto max-w-none object-contain object-bottom pixelated"
+          style={{
+            height: COMBAT_SPRITE_HEIGHT_PX,
+            imageRendering: "pixelated",
+          }}
         />
       </motion.div>
 
       {/* Fighter B: Right side - mirrors left positioning */}
       <motion.div
         initial={{
-          x: 300,
-          y: "20vh",
-          scale: 2.5,
+          x: TRANSITION_INITIAL_X_OFFSET,
+          y: TRANSITION_INITIAL_Y_VIEWPORT,
+          scale: TRANSITION_INITIAL_SCALE,
           opacity: 0,
           scaleX: -1,
         }}
@@ -86,8 +92,11 @@ export function SpriteTransitionBridge({
         <img
           src={fighterB.animations.idle}
           alt={`${fighterB.name} transition`}
-          className="h-72 w-auto max-w-none object-contain object-bottom pixelated"
-          style={{ imageRendering: "pixelated" }}
+          className="w-auto max-w-none object-contain object-bottom pixelated"
+          style={{
+            height: COMBAT_SPRITE_HEIGHT_PX,
+            imageRendering: "pixelated",
+          }}
         />
       </motion.div>
     </motion.div>
