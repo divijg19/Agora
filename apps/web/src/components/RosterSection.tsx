@@ -1,8 +1,8 @@
+import { getEngineUrl } from "@/lib/engineUrl";
 import type { FighterDef } from "@/types/fighter";
 
 async function getRoster(): Promise<FighterDef[]> {
-  const engineUrl =
-    process.env.NEXT_PUBLIC_ENGINE_URL || "http://127.0.0.1:8000";
+  const engineUrl = getEngineUrl();
 
   try {
     const res = await fetch(`${engineUrl}/api/match/roster`, {
