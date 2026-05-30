@@ -140,6 +140,7 @@ export function CombatScreen({
   const [isInfoHovering, setIsInfoHovering] = useState(false);
   const viewportHeight = useViewportHeight();
   const hasBufferedTurnAhead = visualTurnIndex < networkTurns.length - 1;
+  const isEndgameActive = endgamePhase !== "idle";
   const isComplete =
     status === "completed" &&
     verdict !== null &&
@@ -168,6 +169,18 @@ export function CombatScreen({
       advanceTimerRef.current = null;
     }
   }, [isPaused]);
+
+  useEffect(() => {
+    if (!isComplete && !isEndgameActive) {
+      return;
+    }
+
+    if (advanceTimerRef.current) {
+      clearTimeout(advanceTimerRef.current);
+      advanceTimerRef.current = null;
+    }
+    setManualReady(false);
+  }, [isComplete, isEndgameActive]);
 
   useEffect(() => {
     if (!isTyping) {
@@ -486,6 +499,10 @@ export function CombatScreen({
   }, [visualTurnIndex]);
 
   const handleTypingComplete = useCallback(() => {
+    if (isComplete || isEndgameActive) {
+      return;
+    }
+
     if (visualIndexRef.current < networkTurns.length - 1) {
       if (advanceTimerRef.current) {
         clearTimeout(advanceTimerRef.current);
@@ -502,7 +519,13 @@ export function CombatScreen({
         setManualReady(true);
       }
     }
-  }, [networkTurns.length, advanceVisualTurn, debateMode]);
+  }, [
+    networkTurns.length,
+    advanceVisualTurn,
+    debateMode,
+    isComplete,
+    isEndgameActive,
+  ]);
 
   return (
     <motion.div
@@ -1359,6 +1382,8 @@ export function CombatScreen({
 
       {/* Bottom-right NEXT button for manual mode */}
       {!modalOpen &&
+        !isComplete &&
+        !isEndgameActive &&
         manualReady &&
         visualTurnIndex < networkTurns.length - 1 && (
           <div className="absolute bottom-6 right-6 z-60">
