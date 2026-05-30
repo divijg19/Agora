@@ -129,6 +129,10 @@ Detailed documentation lives in `/docs`:
 * backend internals
 * frontend UX
 
+## ✅ CI
+
+GitHub Actions runs frontend typechecks, Biome checks, builds, and engine/ `ruff`/`ty` checks on pushes and pull requests.
+
 ## ⚔️ Philosophy
 
 > AI shouldn’t just answer.
