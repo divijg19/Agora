@@ -33,7 +33,6 @@ const AGGRESSIVE_INTENTS = new Set(["attack", "counter", "objection"]);
 const ORB_FLAME_TONGUES = [
   {
     id: "north-west",
-    className: "left-[12%] top-[16%] h-[42%] w-[12%] rotate-[-22deg]",
     delay: "0s",
     duration: "1.8s",
   },
@@ -307,6 +306,12 @@ export function CombatScreen({
   const fighterAId = fighterA.id;
   const fighterBId = fighterB.id;
   const ROSTER = [fighterA, fighterB];
+  const showChevronA =
+    !isEndgameActive ||
+    (userVote !== null && verdict?.winner_id === fighterA.id);
+  const showChevronB =
+    !isEndgameActive ||
+    (userVote !== null && verdict?.winner_id === fighterB.id);
   const isAChevronDouble =
     isASpeaking && activeIntentVisual !== null
       ? CHEVRON_DOUBLE_INTENTS.has(activeIntentVisual)
@@ -869,7 +874,7 @@ export function CombatScreen({
               <span
                 className={`mr-2 font-mono transition-all duration-300 ${isASpeaking ? "text-yellow-300 opacity-100 drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]" : "text-white/35 opacity-40"}`}
               >
-                {isAChevronDouble ? ">>" : ">"}
+                {showChevronA ? (isAChevronDouble ? ">>" : ">") : ""}
               </span>
               {fighterA.name}
             </div>
@@ -908,7 +913,7 @@ export function CombatScreen({
               <span
                 className={`ml-2 font-mono transition-all duration-300 ${isBSpeaking ? "text-yellow-300 opacity-100 drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]" : "text-white/35 opacity-40"}`}
               >
-                {isBChevronDouble ? "<<" : "<"}
+                {showChevronB ? (isBChevronDouble ? "<<" : "<") : ""}
               </span>
             </div>
           </div>
