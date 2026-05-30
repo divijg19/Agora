@@ -92,6 +92,43 @@ const STAGE_PROGRESSION = [
   { speedMult: 1.2, opacityMult: 1.0, scaleMult: 1.1 }, // Stage 10 (100%)
 ];
 
+function getVotePortraitFrame(fighter: FighterDef, isMirrored = false) {
+  const spriteFolder = fighter.id.charAt(0).toUpperCase() + fighter.id.slice(1);
+  const idleHeadshot =
+    fighter.animations?.idle ??
+    `/sprites/${spriteFolder}/${spriteFolder}_Idle.gif`;
+
+  const isEconomist = fighter.id === "economist";
+  const isDoomer = fighter.id === "doomer";
+
+  const topOffset = isMirrored
+    ? isEconomist
+      ? "-40%"
+      : "-60%"
+    : isEconomist
+      ? "-35%"
+      : "-65%";
+
+  const horizontalOffset = isMirrored
+    ? isDoomer
+      ? "2.0%"
+      : isEconomist
+        ? "-2.5%"
+        : "-3.5%"
+    : isDoomer
+      ? "-2.0%"
+      : isEconomist
+        ? "2.5%"
+        : "3.0%";
+
+  return {
+    idleHeadshot,
+    topOffset,
+    horizontalOffset,
+    isMirrored,
+  };
+}
+
 type EndgamePhase = "idle" | "deliberating" | "voting";
 
 export function CombatScreen({
@@ -277,6 +314,8 @@ export function CombatScreen({
   const modalOpen = isComplete && showVerdictModal;
   const fighterABorderClass = fighterA.color.replace("bg-", "border-");
   const fighterBBorderClass = fighterB.color.replace("bg-", "border-");
+  const fighterAPortrait = getVotePortraitFrame(fighterA);
+  const fighterBPortrait = getVotePortraitFrame(fighterB, true);
   const hpA =
     isComplete && userVote
       ? verdict.winner_id === fighterA.id
@@ -1461,12 +1500,20 @@ export function CombatScreen({
                       whileHover={{ scale: 1.05, y: -5 }}
                       className={`px-8 py-6 border-[6px] ${fighterABorderClass} bg-neutral-900 hover:bg-neutral-800 transition-colors flex flex-col items-center w-full`}
                     >
-                      <img
-                        src={fighterA.animations.idle}
-                        alt={fighterA.name}
-                        className="w-24 h-24 object-cover mb-2 pixelated shadow-2xl border-2 border-gray-800"
-                        style={{ imageRendering: "pixelated" }}
-                      />
+                      <div className="w-24 h-24 bg-gray-900 border-2 border-gray-700 relative overflow-hidden shrink-0 mb-2">
+                        <img
+                          src={fighterAPortrait.idleHeadshot}
+                          alt={`${fighterA.name} idle headshot`}
+                          className="absolute left-1/2 -translate-x-1/2 max-w-none object-contain pixelated"
+                          style={{
+                            imageRendering: "pixelated",
+                            height: "400%",
+                            top: fighterAPortrait.topOffset,
+                            width: "auto",
+                            transform: `translateX(${fighterAPortrait.horizontalOffset})${fighterAPortrait.isMirrored ? " scaleX(-1)" : ""}`,
+                          }}
+                        />
+                      </div>
                       <span className="text-xl font-bold uppercase">
                         {fighterA.name}
                       </span>
@@ -1477,12 +1524,20 @@ export function CombatScreen({
                       whileHover={{ scale: 1.05, y: -5 }}
                       className={`px-8 py-6 border-[6px] ${fighterBBorderClass} bg-neutral-900 hover:bg-neutral-800 transition-colors flex flex-col items-center w-full`}
                     >
-                      <img
-                        src={fighterB.animations.idle}
-                        alt={fighterB.name}
-                        className="w-24 h-24 object-cover mb-2 pixelated shadow-2xl border-2 border-gray-800"
-                        style={{ imageRendering: "pixelated" }}
-                      />
+                      <div className="w-24 h-24 bg-gray-900 border-2 border-gray-700 relative overflow-hidden shrink-0 mb-2">
+                        <img
+                          src={fighterBPortrait.idleHeadshot}
+                          alt={`${fighterB.name} idle headshot`}
+                          className="absolute left-1/2 -translate-x-1/2 max-w-none object-contain pixelated"
+                          style={{
+                            imageRendering: "pixelated",
+                            height: "400%",
+                            top: fighterBPortrait.topOffset,
+                            width: "auto",
+                            transform: `translateX(${fighterBPortrait.horizontalOffset})${fighterBPortrait.isMirrored ? " scaleX(-1)" : ""}`,
+                          }}
+                        />
+                      </div>
                       <span className="text-xl font-bold uppercase">
                         {fighterB.name}
                       </span>
