@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
+import { useViewportHeight } from "../hooks/useViewportHeight.ts";
 import {
   COMBAT_SPRITE_HEIGHT_PX,
-  calculateCombatYPixels,
+  getCombatGroundYPixels,
+  getTransitionStartYPixels,
   TRANSITION_DURATION_MS,
   TRANSITION_INITIAL_SCALE,
   TRANSITION_INITIAL_X_OFFSET,
@@ -23,9 +25,10 @@ export function SpriteTransitionBridge({
   // Animate from setup silhouette (large, bottom-aligned) to combat stage (medium, centered)
   // Setup: h-[80vh] positioned at bottom corners
   // Combat: shared sprite height and translate-y-[35vh]
-  const combatYPixels = calculateCombatYPixels(window.innerHeight);
+  const viewportHeight = useViewportHeight();
+  const combatYPixels = getCombatGroundYPixels(viewportHeight);
   const transitionDuration = TRANSITION_DURATION_MS / 1000;
-  const bridgeStartY = Math.round(window.innerHeight * 0.2);
+  const bridgeStartY = getTransitionStartYPixels(viewportHeight);
 
   // Bridge no longer owns banner timing; VersusBanner will call onHidden
 
