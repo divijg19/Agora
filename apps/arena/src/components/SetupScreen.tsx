@@ -12,6 +12,7 @@ import { ModeToggle } from "./ModeToggle";
 import { SetupParallaxBackground } from "./SetupParallaxBackground";
 
 interface SetupScreenProps {
+  isTransitioning?: boolean;
   onMatchStarted: (
     matchId: string,
     topic: string,
@@ -21,7 +22,10 @@ interface SetupScreenProps {
   ) => void;
 }
 
-export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
+export function SetupScreen({
+  onMatchStarted,
+  isTransitioning = false,
+}: SetupScreenProps) {
   const [roster, setRoster] = useState<FighterDef[]>([]);
   const [rosterError, setRosterError] = useState<string | null>(null);
   const [topic, setTopic] = useState("");
@@ -110,7 +114,8 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="w-full h-screen relative z-10 flex flex-col items-center justify-center overflow-hidden"
+      aria-hidden={isTransitioning}
+      className={`w-full h-screen relative flex flex-col items-center justify-center overflow-hidden ${isTransitioning ? "pointer-events-none" : "z-10"}`}
     >
       <SetupParallaxBackground />
 
@@ -119,7 +124,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
       <div
         className={`absolute left-0 bottom-0 w-1/2 pointer-events-none z-0 flex items-end justify-start overflow-visible ${
           fighterA ? "opacity-80" : "opacity-60"
-        }`}
+        } ${isTransitioning ? "opacity-70" : ""}`}
         style={{ height: `${SETUP_HEIGHT_VH}vh` }}
       >
         <motion.img
@@ -131,7 +136,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
             x: isASelected ? -SETUP_X_OFFSET_SELECTED : -SETUP_X_OFFSET_IDLE,
             y: getFighterYOffset(previewA?.id ?? ""),
           }}
-          transition={{ type: "spring", stiffness: 100 }}
+          transition={{ type: "spring", stiffness: 100, damping: 18, mass: 1 }}
           className="h-full w-auto max-w-none object-contain object-bottom pixelated origin-bottom"
           style={{ imageRendering: "pixelated" }}
         />
@@ -141,7 +146,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
       <div
         className={`absolute right-0 bottom-0 w-1/2 pointer-events-none z-0 flex items-end justify-end overflow-visible ${
           fighterB ? "opacity-80" : "opacity-60"
-        }`}
+        } ${isTransitioning ? "opacity-70" : ""}`}
         style={{ height: `${SETUP_HEIGHT_VH}vh` }}
       >
         <motion.img
@@ -154,7 +159,7 @@ export function SetupScreen({ onMatchStarted }: SetupScreenProps) {
             y: getFighterYOffset(previewB?.id ?? ""),
             scaleX: -1,
           }}
-          transition={{ type: "spring", stiffness: 100 }}
+          transition={{ type: "spring", stiffness: 100, damping: 18, mass: 1 }}
           className="h-full w-auto max-w-none object-contain object-bottom pixelated origin-bottom"
           style={{ imageRendering: "pixelated" }}
         />

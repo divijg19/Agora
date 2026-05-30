@@ -5,9 +5,9 @@ import {
   TRANSITION_DURATION_MS,
   TRANSITION_INITIAL_SCALE,
   TRANSITION_INITIAL_X_OFFSET,
-  TRANSITION_INITIAL_Y_VIEWPORT,
 } from "../lib/spritePositioning";
 import type { FighterDef } from "../types/fighter";
+import { VersusBanner } from "./VersusBanner";
 
 interface SpriteTransitionBridgeProps {
   fighterA: FighterDef;
@@ -25,6 +25,9 @@ export function SpriteTransitionBridge({
   // Combat: shared sprite height and translate-y-[35vh]
   const combatYPixels = calculateCombatYPixels(window.innerHeight);
   const transitionDuration = TRANSITION_DURATION_MS / 1000;
+  const bridgeStartY = Math.round(window.innerHeight * 0.2);
+
+  // Bridge no longer owns banner timing; VersusBanner will call onHidden
 
   return (
     <motion.div
@@ -32,15 +35,45 @@ export function SpriteTransitionBridge({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: transitionDuration }}
-      onAnimationComplete={onTransitionComplete}
-      className="fixed inset-0 z-50 pointer-events-none flex items-start justify-between w-full"
-      style={{ backgroundColor: "white" }}
+      className="fixed inset-0 z-50 pointer-events-none flex items-start justify-between w-full overflow-hidden bg-gray-950"
     >
+      <motion.div
+        aria-hidden
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: transitionDuration }}
+        className="absolute inset-[-10%] z-0 w-[120%] h-[120%]"
+        style={{
+          backgroundImage: 'url("/arena/Arena_Full.png")',
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+
+      <motion.div
+        aria-hidden
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: transitionDuration }}
+        className="absolute inset-0 z-0 bg-gray-950/35"
+      />
+
+      {/* Versus Banner / Intro Text */}
+      <VersusBanner
+        leftName={fighterA.name}
+        rightName={fighterB.name}
+        variant="intro"
+        preset="cinematic"
+        onHidden={onTransitionComplete}
+      />
+
       {/* Fighter A: Left side - animates to combat screen position */}
       <motion.div
         initial={{
           x: -TRANSITION_INITIAL_X_OFFSET,
-          y: TRANSITION_INITIAL_Y_VIEWPORT,
+          y: bridgeStartY,
           scale: TRANSITION_INITIAL_SCALE,
           opacity: 0,
         }}
@@ -51,10 +84,12 @@ export function SpriteTransitionBridge({
           opacity: 1,
         }}
         transition={{
-          duration: transitionDuration,
-          ease: "easeInOut",
+          type: "spring",
+          stiffness: 70,
+          damping: 16,
+          mass: 1.1,
         }}
-        className="flex flex-col items-center justify-end"
+        className="relative z-10 flex flex-col items-center justify-end"
       >
         <img
           src={fighterA.animations.idle}
@@ -71,7 +106,7 @@ export function SpriteTransitionBridge({
       <motion.div
         initial={{
           x: TRANSITION_INITIAL_X_OFFSET,
-          y: TRANSITION_INITIAL_Y_VIEWPORT,
+          y: bridgeStartY,
           scale: TRANSITION_INITIAL_SCALE,
           opacity: 0,
           scaleX: -1,
@@ -84,10 +119,12 @@ export function SpriteTransitionBridge({
           scaleX: -1,
         }}
         transition={{
-          duration: transitionDuration,
-          ease: "easeInOut",
+          type: "spring",
+          stiffness: 70,
+          damping: 16,
+          mass: 1.1,
         }}
-        className="flex flex-col items-center justify-end"
+        className="relative z-10 flex flex-col items-center justify-end"
       >
         <img
           src={fighterB.animations.idle}

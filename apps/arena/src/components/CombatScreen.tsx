@@ -1223,11 +1223,7 @@ export function CombatScreen({
                 )}
               </AnimatePresence>
 
-              {status === "debating" && (
-                <h1 className="text-6xl text-arena-red italic font-bold drop-shadow-[0_0_30px_rgba(255,60,60,1)] absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
-                  VS
-                </h1>
-              )}
+              {/* VS banner removed from CombatScreen; intro is handled by VersusBanner in the transition bridge */}
             </div>
 
             <div className={stageFighterPlacementClass}>
