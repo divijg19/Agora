@@ -93,6 +93,8 @@ const STAGE_PROGRESSION = [
   { speedMult: 1.2, opacityMult: 1.0, scaleMult: 1.1 }, // Stage 10 (100%)
 ];
 
+type EndgamePhase = "idle" | "deliberating" | "voting";
+
 export function CombatScreen({
   matchId,
   topic,
@@ -117,6 +119,7 @@ export function CombatScreen({
   const [showVerdictModal, setShowVerdictModal] = useState(true);
   const [showVotePrompt, setShowVotePrompt] = useState(false);
   const [showJudgeDeliberating, setShowJudgeDeliberating] = useState(false);
+  const [endgamePhase, setEndgamePhase] = useState<EndgamePhase>("idle");
   const [activeCamera, setActiveCamera] = useState<"profile" | "topDown">(
     "profile",
   );
@@ -130,6 +133,7 @@ export function CombatScreen({
   );
   const [isIntroPlaying, setIsIntroPlaying] = useState(true);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasRunEndgameSequenceRef = useRef(false);
   const infoPanelRef = useRef<HTMLDivElement>(null);
   const [manualReady, setManualReady] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -195,20 +199,37 @@ export function CombatScreen({
       setUserVote(null);
     } else {
       setShowVotePrompt(false);
+      setShowJudgeDeliberating(false);
+      setEndgamePhase("idle");
+      hasRunEndgameSequenceRef.current = false;
     }
   }, [status]);
 
   useEffect(() => {
-    if (isComplete) {
-      setShowJudgeDeliberating(true);
-      const timer = setTimeout(() => {
-        setShowJudgeDeliberating(false);
-      }, 2200);
-
-      return () => clearTimeout(timer);
+    if (!isComplete || hasRunEndgameSequenceRef.current) {
+      return;
     }
 
-    setShowJudgeDeliberating(false);
+    hasRunEndgameSequenceRef.current = true;
+    setEndgamePhase("deliberating");
+    setShowJudgeDeliberating(true);
+    setShowVotePrompt(false);
+
+    let voteTimer: ReturnType<typeof setTimeout> | null = null;
+    const deliberationTimer = setTimeout(() => {
+      setShowJudgeDeliberating(false);
+      setEndgamePhase("voting");
+      voteTimer = setTimeout(() => {
+        setShowVotePrompt(true);
+      }, 120);
+    }, 2200);
+
+    return () => {
+      clearTimeout(deliberationTimer);
+      if (voteTimer) {
+        clearTimeout(voteTimer);
+      }
+    };
   }, [isComplete]);
 
   const isASpeaking = status !== "error" && activeSpeakerVisual === fighterA.id;
@@ -445,13 +466,6 @@ export function CombatScreen({
   }, [activeIntentVisual, isASpeaking, isBSpeaking, intentFillPercent]);
 
   // animate orb scale via Framer Motion when its fill changes
-
-  useEffect(() => {
-    if (isComplete && !userVote) {
-      const timer = setTimeout(() => setShowVotePrompt(true), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isComplete, userVote]);
 
   // Reset orbs when verdict is confirmed
   useEffect(() => {
@@ -1371,111 +1385,141 @@ export function CombatScreen({
           animate={{ scale: 1, opacity: 1 }}
           className="absolute inset-0 z-90 flex items-center justify-center p-8 bg-black/80 backdrop-blur-md"
         >
-          <div className="w-full max-w-5xl bg-gray-900 border-4 border-yellow-500 p-10 shadow-[0_0_50px_rgba(234,179,8,0.3)] overflow-y-auto max-h-[90vh]">
-            {!userVote && showVotePrompt ? (
-              <div className="flex flex-col items-center py-2 md:py-6">
-                <h2 className="text-3xl md:text-4xl text-arena-text mb-2 tracking-widest uppercase text-center">
-                  THE DEBATE HAS CONCLUDED
-                </h2>
-                <p className="text-xl text-yellow-500 mb-8 animate-pulse text-center">
-                  WHO WON? CAST YOUR VOTE.
-                </p>
+          <div className="w-full max-w-5xl h-[90vh] bg-gray-900 border-4 border-yellow-500 shadow-[0_0_50px_rgba(234,179,8,0.3)] overflow-hidden flex flex-col">
+            <div className="flex-1 overflow-y-auto p-10">
+              {!userVote && !showVotePrompt ? (
+                <div className="min-h-full flex flex-col items-center justify-center py-8 text-center">
+                  <div className="mb-8 flex flex-col items-center gap-4">
+                    <motion.div
+                      animate={{ y: [0, -10, 0] }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 2.5,
+                        ease: "easeInOut",
+                      }}
+                      className="text-7xl md:text-8xl drop-shadow-[0_0_30px_rgba(253,186,116,0.75)]"
+                    >
+                      ⚖️
+                    </motion.div>
+                    <h2 className="text-3xl md:text-4xl text-white font-black tracking-[0.45em] uppercase drop-shadow-lg">
+                      SILENCE
+                    </h2>
+                  </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                  <motion.button
-                    type="button"
-                    onClick={() => setUserVote(fighterA.id)}
-                    whileHover={{ scale: 1.05, y: -5 }}
-                    className={`px-8 py-6 border-[6px] ${fighterABorderClass} bg-neutral-900 hover:bg-neutral-800 transition-colors flex flex-col items-center w-full`}
-                  >
-                    <img
-                      src={fighterA.animations.idle}
-                      alt={fighterA.name}
-                      className="w-24 h-24 object-cover mb-2 pixelated shadow-2xl border-2 border-gray-800"
-                      style={{ imageRendering: "pixelated" }}
-                    />
-                    <span className="text-xl font-bold uppercase">
-                      {fighterA.name}
-                    </span>
-                  </motion.button>
-                  <motion.button
-                    type="button"
-                    onClick={() => setUserVote(fighterB.id)}
-                    whileHover={{ scale: 1.05, y: -5 }}
-                    className={`px-8 py-6 border-[6px] ${fighterBBorderClass} bg-neutral-900 hover:bg-neutral-800 transition-colors flex flex-col items-center w-full`}
-                  >
-                    <img
-                      src={fighterB.animations.idle}
-                      alt={fighterB.name}
-                      className="w-24 h-24 object-cover mb-2 pixelated shadow-2xl border-2 border-gray-800"
-                      style={{ imageRendering: "pixelated" }}
-                    />
-                    <span className="text-xl font-bold uppercase">
-                      {fighterB.name}
-                    </span>
-                  </motion.button>
+                  <div className="w-full max-w-3xl border-4 border-yellow-500/40 bg-black/30 p-8 md:p-10 shadow-[0_0_40px_rgba(234,179,8,0.12)]">
+                    <h3 className="text-xl md:text-2xl text-yellow-500 uppercase tracking-[0.35em] mb-4">
+                      THE JUDGE IS DELIBERATING
+                    </h3>
+                    <p className="text-lg md:text-xl text-gray-200 leading-relaxed max-w-2xl mx-auto">
+                      Preparing the verdict and vote overlay.
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ) : userVote ? (
-              <>
-                <div className="flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-center border-b-2 border-yellow-500/30 pb-4 mb-6">
-                  <h2 className="text-3xl md:text-4xl text-yellow-500 text-center grow uppercase">
-                    Winner: {winnerName}
+              ) : !userVote && showVotePrompt ? (
+                <div className="flex min-h-full flex-col items-center justify-center py-2 md:py-6 text-center">
+                  <h2 className="text-3xl md:text-4xl text-arena-text mb-2 tracking-widest uppercase text-center">
+                    THE DEBATE HAS CONCLUDED
                   </h2>
-                  <div
-                    className={`px-4 py-2 border-2 uppercase font-bold ${userVote === verdict.winner_id ? "border-arena-green text-arena-green" : "border-arena-red text-arena-red"}`}
-                  >
-                    {userVote === verdict.winner_id
-                      ? "YOU AGREED"
-                      : "JUDGE DISAGREES"}
+                  <p className="text-xl text-yellow-500 mb-8 animate-pulse text-center">
+                    WHO WON? CAST YOUR VOTE.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                    <motion.button
+                      type="button"
+                      onClick={() => setUserVote(fighterA.id)}
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      className={`px-8 py-6 border-[6px] ${fighterABorderClass} bg-neutral-900 hover:bg-neutral-800 transition-colors flex flex-col items-center w-full`}
+                    >
+                      <img
+                        src={fighterA.animations.idle}
+                        alt={fighterA.name}
+                        className="w-24 h-24 object-cover mb-2 pixelated shadow-2xl border-2 border-gray-800"
+                        style={{ imageRendering: "pixelated" }}
+                      />
+                      <span className="text-xl font-bold uppercase">
+                        {fighterA.name}
+                      </span>
+                    </motion.button>
+                    <motion.button
+                      type="button"
+                      onClick={() => setUserVote(fighterB.id)}
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      className={`px-8 py-6 border-[6px] ${fighterBBorderClass} bg-neutral-900 hover:bg-neutral-800 transition-colors flex flex-col items-center w-full`}
+                    >
+                      <img
+                        src={fighterB.animations.idle}
+                        alt={fighterB.name}
+                        className="w-24 h-24 object-cover mb-2 pixelated shadow-2xl border-2 border-gray-800"
+                        style={{ imageRendering: "pixelated" }}
+                      />
+                      <span className="text-xl font-bold uppercase">
+                        {fighterB.name}
+                      </span>
+                    </motion.button>
                   </div>
                 </div>
-
-                <p className="text-xl md:text-2xl mb-8 leading-relaxed text-center font-bold">
-                  "{verdict.punchline_reasoning}"
-                </p>
-
-                <div className="grid grid-cols-2 gap-6 mb-8">
-                  <div
-                    className={`p-4 border-2 ${verdict.winner_id === fighterA.id ? "border-arena-green" : "border-arena-red"}`}
-                  >
-                    <h3 className="text-xl font-bold mb-2 uppercase text-gray-400">
-                      {fighterA.name} Critique:
-                    </h3>
-                    <p className="text-lg text-gray-300 leading-relaxed">
-                      {verdict.fighter_a_critique}
-                    </p>
+              ) : userVote ? (
+                <>
+                  <div className="flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-center border-b-2 border-yellow-500/30 pb-4 mb-6">
+                    <h2 className="text-3xl md:text-4xl text-yellow-500 text-center grow uppercase">
+                      Winner: {winnerName}
+                    </h2>
+                    <div
+                      className={`px-4 py-2 border-2 uppercase font-bold ${userVote === verdict.winner_id ? "border-arena-green text-arena-green" : "border-arena-red text-arena-red"}`}
+                    >
+                      {userVote === verdict.winner_id
+                        ? "YOU AGREED"
+                        : "JUDGE DISAGREES"}
+                    </div>
                   </div>
-                  <div
-                    className={`p-4 border-2 ${verdict.winner_id === fighterB.id ? "border-arena-green" : "border-arena-red"}`}
-                  >
-                    <h3 className="text-xl font-bold mb-2 uppercase text-gray-400">
-                      {fighterB.name} Critique:
-                    </h3>
-                    <p className="text-lg text-gray-300 leading-relaxed">
-                      {verdict.fighter_b_critique}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex flex-col md:flex-row justify-center gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowVerdictModal(false)}
-                    className="px-6 py-3 border-2 border-gray-400 text-gray-300 hover:text-white hover:border-white transition-colors uppercase"
-                  >
-                    CLOSE & REVIEW DEBATE
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onRestart}
-                    className="px-6 py-3 border-2 border-arena-blue text-arena-blue hover:bg-arena-blue hover:text-white transition-colors font-bold uppercase"
-                  >
-                    START NEW DUEL
-                  </button>
-                </div>
-              </>
-            ) : null}
+                  <p className="text-xl md:text-2xl mb-8 leading-relaxed text-center font-bold">
+                    "{verdict.punchline_reasoning}"
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-6 mb-8">
+                    <div
+                      className={`p-4 border-2 ${verdict.winner_id === fighterA.id ? "border-arena-green" : "border-arena-red"}`}
+                    >
+                      <h3 className="text-xl font-bold mb-2 uppercase text-gray-400">
+                        {fighterA.name} Critique:
+                      </h3>
+                      <p className="text-lg text-gray-300 leading-relaxed">
+                        {verdict.fighter_a_critique}
+                      </p>
+                    </div>
+                    <div
+                      className={`p-4 border-2 ${verdict.winner_id === fighterB.id ? "border-arena-green" : "border-arena-red"}`}
+                    >
+                      <h3 className="text-xl font-bold mb-2 uppercase text-gray-400">
+                        {fighterB.name} Critique:
+                      </h3>
+                      <p className="text-lg text-gray-300 leading-relaxed">
+                        {verdict.fighter_b_critique}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row justify-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowVerdictModal(false)}
+                      className="px-6 py-3 border-2 border-gray-400 text-gray-300 hover:text-white hover:border-white transition-colors uppercase"
+                    >
+                      CLOSE & REVIEW DEBATE
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onRestart}
+                      className="px-6 py-3 border-2 border-arena-blue text-arena-blue hover:bg-arena-blue hover:text-white transition-colors font-bold uppercase"
+                    >
+                      START NEW DUEL
+                    </button>
+                  </div>
+                </>
+              ) : null}
+            </div>
           </div>
         </motion.div>
       )}
@@ -1646,47 +1690,53 @@ export function CombatScreen({
       {/* Dedicated Judge Overlay Layer above HUD and stage */}
       <div className="absolute inset-0 z-80 pointer-events-none">
         {/* Judge deliberation dialogue */}
-        {!isIntroPlaying && isComplete && showJudgeDeliberating && (
-          <div className="absolute left-1/2 top-4 w-[70%] -translate-x-1/2">
-            <DialogueBox
-              speakerName="THE JUDGE"
-              rawText="SILENCE. THE JUDGE IS DELIBERATING."
-              isJudge
-              onTypingComplete={() => {}}
-              speakerSide="right"
-            />
-          </div>
-        )}
+        {!isIntroPlaying &&
+          isComplete &&
+          endgamePhase === "deliberating" &&
+          showJudgeDeliberating && (
+            <div className="absolute left-1/2 top-4 w-[70%] -translate-x-1/2">
+              <DialogueBox
+                speakerName="THE JUDGE"
+                rawText="SILENCE. THE JUDGE IS DELIBERATING."
+                isJudge
+                onTypingComplete={() => {}}
+                speakerSide="right"
+              />
+            </div>
+          )}
 
         {/* Judge crest + text */}
         <AnimatePresence>
-          {!isIntroPlaying && isComplete && showJudgeDeliberating && (
-            <motion.div
-              initial={{ y: -500, opacity: 0, scale: 2 }}
-              animate={{ y: -50, opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ type: "spring", damping: 12, stiffness: 50 }}
-              className="absolute left-1/2 bottom-32 -translate-x-1/2 flex flex-col items-center pointer-events-none"
-            >
+          {!isIntroPlaying &&
+            isComplete &&
+            endgamePhase === "deliberating" &&
+            showJudgeDeliberating && (
               <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 3,
-                  ease: "easeInOut",
-                }}
-                className="text-9xl drop-shadow-[0_0_30px_rgba(253,186,116,0.75)] mb-6"
+                initial={{ y: -500, opacity: 0, scale: 2 }}
+                animate={{ y: -50, opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ type: "spring", damping: 12, stiffness: 50 }}
+                className="absolute left-1/2 bottom-32 -translate-x-1/2 flex flex-col items-center pointer-events-none"
               >
-                ⚖️
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 3,
+                    ease: "easeInOut",
+                  }}
+                  className="text-9xl drop-shadow-[0_0_30px_rgba(253,186,116,0.75)] mb-6"
+                >
+                  ⚖️
+                </motion.div>
+                <h2 className="text-3xl text-white font-black tracking-[0.5em] uppercase drop-shadow-lg">
+                  SILENCE
+                </h2>
+                <p className="text-xl text-yellow-500 tracking-widest mt-2 animate-pulse">
+                  THE JUDGE IS DELIBERATING
+                </p>
               </motion.div>
-              <h2 className="text-3xl text-white font-black tracking-[0.5em] uppercase drop-shadow-lg">
-                SILENCE
-              </h2>
-              <p className="text-xl text-yellow-500 tracking-widest mt-2 animate-pulse">
-                THE JUDGE IS DELIBERATING
-              </p>
-            </motion.div>
-          )}
+            )}
         </AnimatePresence>
       </div>
     </motion.div>
