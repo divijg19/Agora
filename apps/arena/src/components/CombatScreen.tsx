@@ -1198,55 +1198,6 @@ export function CombatScreen({
               </div>
             )}
 
-            {/* Dialogue for the Judge */}
-            {!isIntroPlaying && isComplete && showJudgeDeliberating && (
-              <div className="absolute left-1/2 top-4 z-70 w-[70%] -translate-x-1/2">
-                <DialogueBox
-                  speakerName="THE JUDGE"
-                  rawText="SILENCE. THE JUDGE IS DELIBERATING."
-                  isJudge
-                  onTypingComplete={() => {}}
-                  speakerSide="right"
-                />
-              </div>
-            )}
-
-            {/* VS or Judge Graphic */}
-            <div className="absolute inset-0 z-50 pointer-events-none">
-              {/* The Judge's Descent */}
-              <AnimatePresence>
-                {!isIntroPlaying && isComplete && showJudgeDeliberating && (
-                  <motion.div
-                    initial={{ y: -500, opacity: 0, scale: 2 }}
-                    animate={{ y: -50, opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ type: "spring", damping: 12, stiffness: 50 }}
-                    className="absolute left-1/2 bottom-32 -translate-x-1/2 flex flex-col items-center z-40 pointer-events-none"
-                  >
-                    <motion.div
-                      animate={{ y: [0, -10, 0] }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 3,
-                        ease: "easeInOut",
-                      }}
-                      className="text-9xl drop-shadow-[0_0_30px_rgba(253,186,116,0.75)] mb-6"
-                    >
-                      ⚖️
-                    </motion.div>
-                    <h2 className="text-3xl text-white font-black tracking-[0.5em] uppercase drop-shadow-lg">
-                      SILENCE
-                    </h2>
-                    <p className="text-xl text-yellow-500 tracking-widest mt-2 animate-pulse">
-                      THE JUDGE IS DELIBERATING
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* VS banner removed from CombatScreen; intro is handled by VersusBanner in the transition bridge */}
-            </div>
-
             <div style={stageFighterPlacementStyle}>
               <FighterSprite
                 fighter={fighterB}
@@ -1418,7 +1369,7 @@ export function CombatScreen({
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="absolute inset-0 z-50 flex items-center justify-center p-8 bg-black/80 backdrop-blur-md"
+          className="absolute inset-0 z-90 flex items-center justify-center p-8 bg-black/80 backdrop-blur-md"
         >
           <div className="w-full max-w-5xl bg-gray-900 border-4 border-yellow-500 p-10 shadow-[0_0_50px_rgba(234,179,8,0.3)] overflow-y-auto max-h-[90vh]">
             {!userVote && showVotePrompt ? (
@@ -1530,7 +1481,7 @@ export function CombatScreen({
       )}
 
       {isComplete && !showVerdictModal && (
-        <div className="absolute inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-md overflow-hidden">
+        <div className="absolute inset-0 z-90 flex flex-col bg-black/95 backdrop-blur-md overflow-hidden">
           {/* Sticky Header */}
           <div className="flex justify-between items-center px-10 py-6 border-b-4 border-gray-800 bg-black/90 z-20 shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
             <div>
@@ -1674,7 +1625,7 @@ export function CombatScreen({
 
       {/* Catastrophic Error Overlay */}
       {status === "error" && (
-        <div className="absolute inset-0 bg-black/80 z-50 flex flex-col items-center justify-center backdrop-blur-sm border-4 border-arena-red">
+        <div className="absolute inset-0 bg-black/80 z-95 flex flex-col items-center justify-center backdrop-blur-sm border-4 border-arena-red">
           <h1 className="text-6xl text-arena-red font-bold mb-6 tracking-widest uppercase animate-pulse">
             CONNECTION LOST
           </h1>
@@ -1691,6 +1642,53 @@ export function CombatScreen({
           </button>
         </div>
       )}
+
+      {/* Dedicated Judge Overlay Layer above HUD and stage */}
+      <div className="absolute inset-0 z-80 pointer-events-none">
+        {/* Judge deliberation dialogue */}
+        {!isIntroPlaying && isComplete && showJudgeDeliberating && (
+          <div className="absolute left-1/2 top-4 w-[70%] -translate-x-1/2">
+            <DialogueBox
+              speakerName="THE JUDGE"
+              rawText="SILENCE. THE JUDGE IS DELIBERATING."
+              isJudge
+              onTypingComplete={() => {}}
+              speakerSide="right"
+            />
+          </div>
+        )}
+
+        {/* Judge crest + text */}
+        <AnimatePresence>
+          {!isIntroPlaying && isComplete && showJudgeDeliberating && (
+            <motion.div
+              initial={{ y: -500, opacity: 0, scale: 2 }}
+              animate={{ y: -50, opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ type: "spring", damping: 12, stiffness: 50 }}
+              className="absolute left-1/2 bottom-32 -translate-x-1/2 flex flex-col items-center pointer-events-none"
+            >
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 3,
+                  ease: "easeInOut",
+                }}
+                className="text-9xl drop-shadow-[0_0_30px_rgba(253,186,116,0.75)] mb-6"
+              >
+                ⚖️
+              </motion.div>
+              <h2 className="text-3xl text-white font-black tracking-[0.5em] uppercase drop-shadow-lg">
+                SILENCE
+              </h2>
+              <p className="text-xl text-yellow-500 tracking-widest mt-2 animate-pulse">
+                THE JUDGE IS DELIBERATING
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </motion.div>
   );
 }
