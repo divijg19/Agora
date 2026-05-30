@@ -20,6 +20,22 @@ export const TRANSITION_INITIAL_Y_VIEWPORT = "20vh";
 export const TRANSITION_INITIAL_SCALE = 2.5;
 
 /**
+ * Calculate the combat ground landing point in pixels for a given viewport.
+ * This is the shared end target for both the transition bridge and the combat screen.
+ */
+export function getCombatGroundYPixels(viewportHeight: number): number {
+  return calculateCombatYPixels(viewportHeight);
+}
+
+/**
+ * Calculate the bridge's starting Y position in pixels for a given viewport.
+ * This keeps the transition's first frame proportional to the same screen size.
+ */
+export function getTransitionStartYPixels(viewportHeight: number): number {
+  return Math.round(viewportHeight * 0.2);
+}
+
+/**
  * Calculate the pixel value equivalent of 35vh (combat Y offset on desktop)
  * @param viewportHeight - The height of the browser viewport in pixels
  * @returns The pixel value representing 35% of the viewport height

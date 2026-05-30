@@ -2,6 +2,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Info, Pause } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEngineStream } from "../hooks/useEngineStream";
+import { useViewportHeight } from "../hooks/useViewportHeight.ts";
+import { getCombatGroundYPixels } from "../lib/spritePositioning";
 import type { FighterDef } from "../types/fighter";
 import { CombatParallaxBackground } from "./CombatParallaxBackground";
 import { DialogueBox } from "./DialogueBox";
@@ -131,6 +133,7 @@ export function CombatScreen({
   const [manualReady, setManualReady] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isInfoHovering, setIsInfoHovering] = useState(false);
+  const viewportHeight = useViewportHeight();
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsIntroPlaying(false);
@@ -238,7 +241,10 @@ export function CombatScreen({
         ? 100
         : 0
       : 100;
-  const stageFighterPlacementClass = "translate-y-full md:translate-y-[35vh]";
+  const combatGroundYPixels = getCombatGroundYPixels(viewportHeight);
+  const stageFighterPlacementStyle = {
+    transform: `translateY(${combatGroundYPixels}px)`,
+  };
   const winnerName =
     isComplete && verdict.winner_id === fighterA.id
       ? fighterA.name
@@ -1137,7 +1143,7 @@ export function CombatScreen({
               modalOpen ? "opacity-60 blur-[1px]" : "opacity-100"
             }`}
           >
-            <div className={stageFighterPlacementClass}>
+            <div style={stageFighterPlacementStyle}>
               <FighterSprite
                 fighter={fighterA}
                 isActive={isASpeaking}
@@ -1226,7 +1232,7 @@ export function CombatScreen({
               {/* VS banner removed from CombatScreen; intro is handled by VersusBanner in the transition bridge */}
             </div>
 
-            <div className={stageFighterPlacementClass}>
+            <div style={stageFighterPlacementStyle}>
               <FighterSprite
                 fighter={fighterB}
                 isActive={isBSpeaking}
