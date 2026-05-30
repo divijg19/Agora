@@ -116,6 +116,7 @@ export function CombatScreen({
   } = useEngineStream(matchId);
   const [showVerdictModal, setShowVerdictModal] = useState(true);
   const [showVotePrompt, setShowVotePrompt] = useState(false);
+  const [showJudgeDeliberating, setShowJudgeDeliberating] = useState(false);
   const [activeCamera, setActiveCamera] = useState<"profile" | "topDown">(
     "profile",
   );
@@ -134,6 +135,13 @@ export function CombatScreen({
   const [isPaused, setIsPaused] = useState(false);
   const [isInfoHovering, setIsInfoHovering] = useState(false);
   const viewportHeight = useViewportHeight();
+  const hasBufferedTurnAhead = visualTurnIndex < networkTurns.length - 1;
+  const isComplete =
+    status === "completed" &&
+    verdict !== null &&
+    !hasBufferedTurnAhead &&
+    !isTyping;
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsIntroPlaying(false);
@@ -190,6 +198,19 @@ export function CombatScreen({
     }
   }, [status]);
 
+  useEffect(() => {
+    if (isComplete) {
+      setShowJudgeDeliberating(true);
+      const timer = setTimeout(() => {
+        setShowJudgeDeliberating(false);
+      }, 2200);
+
+      return () => clearTimeout(timer);
+    }
+
+    setShowJudgeDeliberating(false);
+  }, [isComplete]);
+
   const isASpeaking = status !== "error" && activeSpeakerVisual === fighterA.id;
   const isBSpeaking = status !== "error" && activeSpeakerVisual === fighterB.id;
   const isJudge = status !== "error" && activeSpeakerVisual === "judge";
@@ -220,12 +241,6 @@ export function CombatScreen({
   }, [status, currentIntent]);
 
   // Calculate HP for game feel (Loser drops to 0 at the end)
-  const hasBufferedTurnAhead = visualTurnIndex < networkTurns.length - 1;
-  const isComplete =
-    status === "completed" &&
-    verdict !== null &&
-    !hasBufferedTurnAhead &&
-    !isTyping;
   const modalOpen = isComplete && showVerdictModal;
   const fighterABorderClass = fighterA.color.replace("bg-", "border-");
   const fighterBBorderClass = fighterB.color.replace("bg-", "border-");
@@ -1184,13 +1199,13 @@ export function CombatScreen({
             )}
 
             {/* Dialogue for the Judge */}
-            {!isIntroPlaying && !isComplete && isJudge && (
+            {!isIntroPlaying && isComplete && showJudgeDeliberating && (
               <div className="absolute left-1/2 top-4 z-70 w-[70%] -translate-x-1/2">
                 <DialogueBox
                   speakerName="THE JUDGE"
-                  rawText={rawText}
-                  isJudge={isJudge}
-                  onTypingComplete={handleTypingComplete}
+                  rawText="SILENCE. THE JUDGE IS DELIBERATING."
+                  isJudge
+                  onTypingComplete={() => {}}
                   speakerSide="right"
                 />
               </div>
@@ -1200,7 +1215,7 @@ export function CombatScreen({
             <div className="absolute inset-0 z-50 pointer-events-none">
               {/* The Judge's Descent */}
               <AnimatePresence>
-                {status === "judging" && (
+                {!isIntroPlaying && isComplete && showJudgeDeliberating && (
                   <motion.div
                     initial={{ y: -500, opacity: 0, scale: 2 }}
                     animate={{ y: -50, opacity: 1, scale: 1 }}
