@@ -13,7 +13,4 @@ class ArenaEvent(str, Enum):
 
 def format_sse(event: ArenaEvent, data: Dict[str, Any]) -> Dict[str, Any]:
     """Formats data into an sse-starlette compliant dictionary."""
-    return {
-        "event": event.value,
-        "data": json.dumps(data)
-    }
+    return {"event": event.value, "data": json.dumps(data)}
