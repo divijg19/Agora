@@ -36,14 +36,14 @@
       "name": "web",
       "version": "0.1.0",
       "dependencies": {
-        "framer-motion": "^12.42.2",
+        "framer-motion": "^12.43.0",
         "next": "16.2.12",
         "react": "19.2.8",
         "react-dom": "19.2.8",
       },
       "devDependencies": {
         "@tailwindcss/postcss": "^4.3.3",
-        "@types/node": "^26.1.1",
+        "@types/node": "^26.1.2",
         "@types/react": "^19.2.17",
         "@types/react-dom": "^19.2.3",
         "tailwindcss": "^4.3.3",
