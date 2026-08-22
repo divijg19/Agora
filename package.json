@@ -24,7 +24,7 @@
 		"concurrently": "^10.0.5"
 	},
 	"dependencies": {
-		"@biomejs/biome": "^2.5.9",
+		"@biomejs/biome": "^2.5.10",
 		"typescript": "^7.0.2"
 	}
 }
