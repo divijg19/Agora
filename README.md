@@ -1,5 +1,6 @@
 # ⚔️`Agora`
-### *Where ideas fight.*
+
+### _Where ideas fight._
 
 ## 🏛️ What is an Agora?
 
@@ -8,7 +9,6 @@ In ancient Greece, the **Agora** was a public arena for debate- a place where id
 ## ⚡ What is this?
 
 In layman's terms: an **AI debate arena**.
-
 - Pick two AI fighters (personas)
 - Enter a topic
 - Watch a structured, turn-based debate unfold live
@@ -41,11 +41,11 @@ Every debate is:
 
 ## 🎯 v1 Scope
 
-* 2 fighters
-* 4–6 turns
-* single topic
-* no auth
-* no persistence
+- 2 fighters
+- 4–6 turns
+- single topic
+- no auth
+- no persistence
 
 ## 🧩 Features
 
@@ -95,6 +95,7 @@ Every debate is:
 ## 🔄 API (Minimal)
 
 ### Start
+
 `POST /debate/start`
 
 ```json
@@ -111,23 +112,21 @@ Every debate is:
 `GET /debate/stream/{session_id}`
 
 Events:
-
-* `turn_start`
-* `chunk`
-* `turn_end`
-* `result`
+- `turn_start`
+- `chunk`
+- `turn_end`
+- `result`
 
 ---
 
 ## 📚 Docs
 
 Detailed documentation lives in `/docs`:
-
-* architecture
-* prompt design
-* personas
-* backend internals
-* frontend UX
+- architecture
+- prompt design
+- personas
+- backend internals
+- frontend UX
 
 ## ✅ CI
 
