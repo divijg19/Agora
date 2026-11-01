@@ -12,14 +12,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "framer-motion": "^14.6.0",
-    "lucide-react": "^1.61.0",
+    "framer-motion": "^14.9.0",
+    "lucide-react": "^1.66.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
-    "@types/node": "^26.6.5",
+    "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
